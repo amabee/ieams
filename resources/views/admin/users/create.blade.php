@@ -1,10 +1,5 @@
 @extends('layouts.app')
 @section('title','Create User')
-@section('breadcrumb')
-<li class="breadcrumb-item">Admin</li>
-<li class="breadcrumb-item"><a href="{{ route('admin.users.index') }}">Users</a></li>
-<li class="breadcrumb-item active">Create</li>
-@endsection
 @section('content')
 <div class="row justify-content-center">
     <div class="col-md-8">

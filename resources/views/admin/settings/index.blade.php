@@ -1,9 +1,5 @@
 @extends('layouts.app')
 @section('title','System Settings')
-@section('breadcrumb')
-<li class="breadcrumb-item">Admin</li>
-<li class="breadcrumb-item active">Settings</li>
-@endsection
 @section('content')
 <div class="row justify-content-center">
     <div class="col-md-10">

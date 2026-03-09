@@ -1,9 +1,5 @@
 @extends('layouts.app')
 @section('title','Add Shift')
-@section('breadcrumb')
-<li class="breadcrumb-item"><a href="{{ route('shifts.index') }}">Shifts</a></li>
-<li class="breadcrumb-item active">Add Shift</li>
-@endsection
 @section('content')
 <div class="card shadow-sm border-0" style="max-width:540px">
     <div class="card-header bg-white border-0 pt-3"><h6 class="mb-0 fw-semibold">New Shift</h6></div>

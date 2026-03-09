@@ -19,82 +19,82 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SettingsController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn () => redirect()->route('login'));
+Route::get('/', fn() => redirect()->route('login'));
 
 Route::middleware(['auth'])->group(function () {
 
-    // Dashboard
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+  // Dashboard
+  Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Profile (Breeze)
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+  // Profile (Breeze)
+  Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+  Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+  Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Branches
-    Route::resource('branches', BranchController::class);
+  // Branches
+  Route::resource('branches', BranchController::class)->middleware('can:view branches');
 
-    // Employees
-    Route::resource('employees', EmployeeController::class);
+  // Employees
+  Route::resource('employees', EmployeeController::class)->middleware('can:view employees');
 
-    // Shifts / Schedules
-    Route::resource('shifts', ShiftController::class);
+  // Shifts / Schedules
+  Route::resource('shifts', ShiftController::class);
 
-    // Attendance Recording (Employee-facing)
-    Route::get('/attendance/record', [AttendanceController::class, 'index'])->name('attendance.record');
-    Route::post('/attendance/time-in', [AttendanceController::class, 'timeIn'])->name('attendance.time-in');
-    Route::post('/attendance/time-out', [AttendanceController::class, 'timeOut'])->name('attendance.time-out');
+  // Attendance Recording (Employee-facing)
+  Route::get('/attendance/record', [AttendanceController::class, 'index'])->name('attendance.record');
+  Route::post('/attendance/time-in', [AttendanceController::class, 'timeIn'])->name('attendance.time-in');
+  Route::post('/attendance/time-out', [AttendanceController::class, 'timeOut'])->name('attendance.time-out');
 
-    // Attendance Monitor (HR/Manager)
-    Route::get('/attendance/monitor', [AttendanceMonitorController::class, 'index'])->name('attendance.monitor');
-    Route::get('/attendance/monitor/data', [AttendanceMonitorController::class, 'data'])->name('attendance.monitor.data');
+  // Attendance Monitor (HR/Manager)
+  Route::get('/attendance/monitor', [AttendanceMonitorController::class, 'index'])->name('attendance.monitor');
+  Route::get('/attendance/monitor/data', [AttendanceMonitorController::class, 'data'])->name('attendance.monitor.data');
 
-    // Attendance Management (HR/Admin)
-    Route::get('/attendance/manage', [AttendanceManagementController::class, 'index'])->name('attendance.manage');
-    Route::get('/attendance/manage/{record}/edit', [AttendanceManagementController::class, 'edit'])->name('attendance.manage.edit');
-    Route::put('/attendance/manage/{record}', [AttendanceManagementController::class, 'update'])->name('attendance.manage.update');
-    Route::get('/attendance/corrections', [AttendanceManagementController::class, 'corrections'])->name('attendance.corrections');
-    Route::post('/attendance/corrections/{correction}/approve', [AttendanceManagementController::class, 'approve'])->name('attendance.corrections.approve');
-    Route::post('/attendance/corrections/{correction}/deny', [AttendanceManagementController::class, 'deny'])->name('attendance.corrections.deny');
+  // Attendance Management (HR/Admin)
+  Route::get('/attendance/manage', [AttendanceManagementController::class, 'index'])->name('attendance.manage');
+  Route::get('/attendance/manage/{record}/edit', [AttendanceManagementController::class, 'edit'])->name('attendance.manage.edit');
+  Route::put('/attendance/manage/{record}', [AttendanceManagementController::class, 'update'])->name('attendance.manage.update');
+  Route::get('/attendance/corrections', [AttendanceManagementController::class, 'corrections'])->name('attendance.corrections');
+  Route::post('/attendance/corrections/{correction}/approve', [AttendanceManagementController::class, 'approve'])->name('attendance.corrections.approve');
+  Route::post('/attendance/corrections/{correction}/deny', [AttendanceManagementController::class, 'deny'])->name('attendance.corrections.deny');
 
-    // Leaves
-    Route::resource('leaves', LeaveController::class);
-    Route::post('/leaves/{leave}/approve', [LeaveController::class, 'approve'])->name('leaves.approve');
-    Route::post('/leaves/{leave}/deny', [LeaveController::class, 'deny'])->name('leaves.deny');
+  // Leaves
+  Route::resource('leaves', LeaveController::class);
+  Route::post('/leaves/{leave}/approve', [LeaveController::class, 'approve'])->name('leaves.approve');
+  Route::post('/leaves/{leave}/deny', [LeaveController::class, 'deny'])->name('leaves.deny');
 
-    // Reports
-    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-    Route::post('/reports/generate', [ReportController::class, 'generate'])->name('reports.generate');
-    Route::get('/reports/download/{type}', [ReportController::class, 'download'])->name('reports.download');
+  // Reports
+  Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+  Route::post('/reports/generate', [ReportController::class, 'generate'])->name('reports.generate');
+  Route::get('/reports/download/{type}', [ReportController::class, 'download'])->name('reports.download');
 
-    // Analytics
-    Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
-    Route::get('/analytics/data', [AnalyticsController::class, 'data'])->name('analytics.data');
+  // Analytics
+  Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
+  Route::get('/analytics/data', [AnalyticsController::class, 'data'])->name('analytics.data');
 
-    // Forecasting
-    Route::get('/forecasting', [ForecastController::class, 'index'])->name('forecasting.index');
-    Route::get('/forecasting/data', [ForecastController::class, 'data'])->name('forecasting.data');
-    Route::post('/forecasting/run', [ForecastController::class, 'run'])->name('forecasting.run');
+  // Forecasting
+  Route::get('/forecasting', [ForecastController::class, 'index'])->name('forecasting.index');
+  Route::get('/forecasting/data', [ForecastController::class, 'data'])->name('forecasting.data');
+  Route::post('/forecasting/run', [ForecastController::class, 'run'])->name('forecasting.run');
 
-    // Notifications
-    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
-    Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
+  // Notifications
+  Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+  Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+  Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
 
-    // Audit Logs
-    Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+  // Audit Logs
+  Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
 
-    // Backups
-    Route::get('/backups', [BackupController::class, 'index'])->name('backups.index');
-    Route::post('/backups/run', [BackupController::class, 'run'])->name('backups.run');
-    Route::get('/backups/{backup}/download', [BackupController::class, 'download'])->name('backups.download');
+  // Backups
+  Route::get('/backups', [BackupController::class, 'index'])->name('backups.index');
+  Route::post('/backups/run', [BackupController::class, 'run'])->name('backups.run');
+  Route::get('/backups/{backup}/download', [BackupController::class, 'download'])->name('backups.download');
 
-    // Admin
-    Route::prefix('admin')->name('admin.')->group(function () {
-        Route::resource('users', UserController::class);
-        Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
-        Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
-    });
+  // Admin
+  Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('users', UserController::class);
+    Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
+  });
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

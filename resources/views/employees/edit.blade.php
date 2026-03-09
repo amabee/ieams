@@ -1,9 +1,5 @@
 @extends('layouts.app')
 @section('title','Edit Employee')
-@section('breadcrumb')
-<li class="breadcrumb-item"><a href="{{ route('employees.index') }}">Employees</a></li>
-<li class="breadcrumb-item active">Edit</li>
-@endsection
 @section('content')
 <div class="card shadow-sm border-0" style="max-width:760px">
     <div class="card-header bg-white border-0 pt-3">

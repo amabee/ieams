@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title','Employees')
-@section('breadcrumb')<li class="breadcrumb-item active">Employees</li>@endsection
 @section('content')
+
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h5 class="mb-0 fw-bold"><i class="bi bi-people me-1"></i> Employees</h5>
     @can('create employees')

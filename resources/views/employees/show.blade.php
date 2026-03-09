@@ -1,9 +1,5 @@
 @extends('layouts.app')
 @section('title', $employee->full_name)
-@section('breadcrumb')
-<li class="breadcrumb-item"><a href="{{ route('employees.index') }}">Employees</a></li>
-<li class="breadcrumb-item active">{{ $employee->full_name }}</li>
-@endsection
 @section('content')
 <div class="row g-3">
     <div class="col-md-4">

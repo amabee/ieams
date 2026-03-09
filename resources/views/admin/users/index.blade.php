@@ -1,9 +1,5 @@
 @extends('layouts.app')
 @section('title','User Management')
-@section('breadcrumb')
-<li class="breadcrumb-item">Admin</li>
-<li class="breadcrumb-item active">Users</li>
-@endsection
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0 fw-bold">User Management</h4>

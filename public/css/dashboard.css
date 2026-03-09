@@ -1,0 +1,50 @@
+.welcome-card {
+    background: linear-gradient(135deg, #9055fd 0%, #6610f2 100%) !important;
+    overflow: hidden;
+    position: relative;
+    min-height: 180px;
+}
+.welcome-card,
+.welcome-card .card-body,
+.welcome-card h4,
+.welcome-card p,
+.welcome-card small,
+.welcome-card span,
+.welcome-card strong { color: #fff !important; }
+.welcome-card .btn-light          { color: #696cff !important; font-weight: 600; }
+.welcome-card .btn-outline-light  { color: rgba(255,255,255,.9) !important; border-color: rgba(255,255,255,.5) !important; }
+.welcome-card .welcome-img {
+    position: absolute;
+    bottom: 0; right: 1.5rem;
+    height: 95%;
+    max-height: 170px;
+    pointer-events: none;
+}
+
+/* Stat cards with sparklines */
+.sparkline-card .stat-num { font-size: 1.9rem; font-weight: 700; line-height: 1; }
+.sparkline-canvas { width: 100% !important; height: 60px !important; }
+
+/* Arc gauge */
+.gauge-svg-wrap { position: relative; width: 160px; height: 160px; }
+.gauge-svg-wrap .gauge-label {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%); text-align: center; line-height: 1.2;
+}
+
+/* Status badges */
+.badge-present  { background: rgba(113,221,55,.15); color: #71dd37; }
+.badge-late     { background: rgba(255,171,0,.15);  color: #ffab00; }
+.badge-absent   { background: rgba(255,62,29,.15);  color: #ff3e1d; }
+.badge-on_leave { background: rgba(3,195,236,.15);  color: #03c3ec; }
+
+/* Breakdown row */
+.breakdown-dot { width:10px; height:10px; border-radius:50%; display:inline-block; flex-shrink:0; }
+
+/* Transaction-style list */
+.txn-icon { width:2.25rem; height:2.25rem; border-radius:.5rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:1.1rem; }
+
+/* Ring donut */
+.ring-wrap { position:relative; width:120px; height:120px; }
+.ring-wrap canvas { border-radius:50%; }
+.ring-label { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; line-height:1.2; }

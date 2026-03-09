@@ -29,9 +29,108 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 
+    <!-- Bootstrap Icons (for page compatibility) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
     <!-- Helpers -->
     <script src="{{ asset('assets/vendor/js/helpers.js') }}"></script>
     <script src="{{ asset('assets/js/config.js') }}"></script>
+
+    <!-- Custom compatibility styles for existing pages -->
+    <style>
+        .stat-card { border: none !important; border-radius: 0.5rem; }
+        .stat-card .stat-icon {
+            width: 48px; height: 48px;
+            border-radius: 0.5rem;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; flex-shrink: 0;
+        }
+        .table-responsive-stack tr td:first-child { font-weight: 600; }
+        @media (max-width: 575.98px) {
+            .table-responsive-stack thead { display: none; }
+            .table-responsive-stack tr { display: block; margin-bottom: 1rem; border: 1px solid #dee2e6; border-radius: .375rem; }
+            .table-responsive-stack td { display: flex; justify-content: space-between; padding: .5rem .75rem; border: 0; border-bottom: 1px solid #f0f0f0; }
+            .table-responsive-stack td::before { content: attr(data-label); font-weight: 600; margin-right: 1rem; }
+        }
+
+        /* ===== Sidebar Collapse — Sneat Pro style ===== */
+        #layout-menu { transition: width 0.35s ease !important; }
+        .layout-page  { transition: padding-left 0.35s ease; }
+
+        /* Navbar toggle button (desktop) */
+        .sidebar-toggler {
+            cursor: pointer;
+            color: #697a8d;
+            font-size: 1.375rem;
+            line-height: 1;
+            background: none;
+            border: none;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            margin-right: 0.75rem;
+            transition: color 0.2s ease;
+        }
+        .sidebar-toggler:hover { color: #566a7f; }
+
+        /* ---- COLLAPSED (desktop only) ---- */
+        @media (min-width: 1200px) {
+            html.layout-menu-collapsed #layout-menu {
+                width: 6rem !important;
+                overflow: visible !important;
+            }
+            /* Clip the scrollable inner list */
+            html.layout-menu-collapsed #layout-menu .menu-inner,
+            html.layout-menu-collapsed #layout-menu .ps {
+                overflow: hidden !important;
+            }
+            /* Shift content area */
+            html.layout-menu-collapsed.layout-menu-fixed .layout-page {
+                padding-left: 6rem !important;
+            }
+
+            /* ---- icon-only strip (collapsed, not hovering) ---- */
+
+            /* KEY FIX: Sneat sets width:16.25rem on menu-item/header — override to strip width */
+            html.layout-menu-collapsed:not(.layout-menu-hover) #layout-menu .menu-inner > .menu-item,
+            html.layout-menu-collapsed:not(.layout-menu-hover) #layout-menu .menu-block,
+            html.layout-menu-collapsed:not(.layout-menu-hover) #layout-menu .menu-inner > .menu-header {
+                width: 6rem !important;
+            }
+            /* Hide labels, section headers, submenus */
+            html.layout-menu-collapsed:not(.layout-menu-hover) #layout-menu [data-i18n],
+            html.layout-menu-collapsed:not(.layout-menu-hover) #layout-menu .menu-header,
+            html.layout-menu-collapsed:not(.layout-menu-hover) #layout-menu .app-brand-text,
+            html.layout-menu-collapsed:not(.layout-menu-hover) #layout-menu .menu-sub {
+                display: none !important;
+            }
+            /* Align icon within the 6rem strip */
+            html.layout-menu-collapsed:not(.layout-menu-hover) #layout-menu .menu-link {
+                width: 6rem !important;
+                padding-left: 1.4rem !important;
+                padding-right: 0.5rem !important;
+                justify-content: flex-start !important;
+            }
+            html.layout-menu-collapsed:not(.layout-menu-hover) #layout-menu .menu-icon {
+                margin-right: 0 !important;
+                font-size: 1.25rem !important;
+                min-width: 1.875rem !important;
+                text-align: center;
+            }
+            /* Center app logo when collapsed */
+            html.layout-menu-collapsed:not(.layout-menu-hover) #layout-menu .app-brand-link {
+                margin: 0 auto !important;
+            }
+
+            /* ---- HOVER EXPAND: full menu as overlay ---- */
+            html.layout-menu-collapsed.layout-menu-hover #layout-menu {
+                width: 16.25rem !important;
+                overflow: hidden !important;
+                box-shadow: 0.375rem 0 1.5rem rgba(34,48,74,0.15);
+                z-index: 1200 !important;
+            }
+        }
+    </style>
 
     @stack('styles')
 </head>
@@ -54,9 +153,6 @@
                         <span class="app-brand-text demo menu-text fw-bolder ms-2">IEAMS</span>
                     </a>
 
-                    <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
-                        <i class="bx bx-chevron-left bx-sm align-middle"></i>
-                    </a>
                 </div>
 
                 <div class="menu-inner-shadow"></div>
@@ -70,7 +166,7 @@
                         </a>
                     </li>
 
-                    @canany(['branch_manager', 'admin', 'superadmin'])
+                    @hasanyrole(['branch_manager', 'admin', 'superadmin'])
                     <!-- Branches -->
                     <li class="menu-header small text-uppercase"><span class="menu-header-text">Management</span></li>
                     
@@ -80,9 +176,9 @@
                             <div data-i18n="Branches">Branches</div>
                         </a>
                     </li>
-                    @endcanany
+                    @endhasanyrole
 
-                    @canany(['hr', 'admin', 'superadmin'])
+                    @hasanyrole(['hr', 'admin', 'superadmin'])
                     <!-- Employees -->
                     <li class="menu-item {{ request()->routeIs('employees.*') ? 'active' : '' }}">
                         <a href="{{ route('employees.index') }}" class="menu-link">
@@ -90,7 +186,7 @@
                             <div data-i18n="Employees">Employees</div>
                         </a>
                     </li>
-                    @endcanany
+                    @endhasanyrole
 
                     <!-- Attendance -->
                     <li class="menu-header small text-uppercase"><span class="menu-header-text">Attendance</span></li>
@@ -102,7 +198,7 @@
                         </a>
                     </li>
 
-                    @canany(['branch_manager', 'hr', 'admin', 'superadmin'])
+                    @hasanyrole(['branch_manager', 'hr', 'admin', 'superadmin'])
                     <li class="menu-item {{ request()->routeIs('attendance.monitor') ? 'active' : '' }}">
                         <a href="{{ route('attendance.monitor') }}" class="menu-link">
                             <i class="menu-icon tf-icons bx bx-desktop"></i>
@@ -116,7 +212,7 @@
                             <div data-i18n="Manage">Manage</div>
                         </a>
                     </li>
-                    @endcanany
+                    @endhasanyrole
 
                     <!-- Leaves -->
                     <li class="menu-header small text-uppercase"><span class="menu-header-text">Leave Management</span></li>
@@ -140,7 +236,7 @@
                         </ul>
                     </li>
 
-                    @canany(['hr', 'admin', 'superadmin'])
+                    @hasanyrole(['hr', 'admin', 'superadmin'])
                     <!-- Reports & Analytics -->
                     <li class="menu-header small text-uppercase"><span class="menu-header-text">Reports</span></li>
                     
@@ -164,9 +260,9 @@
                             <div data-i18n="Forecasting">Forecasting</div>
                         </a>
                     </li>
-                    @endcanany
+                    @endhasanyrole
 
-                    @canany(['admin', 'superadmin'])
+                    @hasanyrole(['admin', 'superadmin'])
                     <!-- System -->
                     <li class="menu-header small text-uppercase"><span class="menu-header-text">System</span></li>
                     
@@ -197,9 +293,9 @@
                             <div data-i18n="Backups">Backups</div>
                         </a>
                     </li>
-                    @endcanany
+                    @endhasanyrole
 
-                    @can('superadmin')
+                    @hasrole('superadmin')
                     <!-- Admin -->
                     <li class="menu-header small text-uppercase"><span class="menu-header-text">Administration</span></li>
                     
@@ -216,7 +312,7 @@
                             <div data-i18n="Settings">Settings</div>
                         </a>
                     </li>
-                    @endcan
+                    @endhasrole
                 </ul>
             </aside>
             <!-- / Menu -->
@@ -225,21 +321,18 @@
             <div class="layout-page">
                 <!-- Navbar -->
                 <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+                    <!-- Mobile hamburger -->
                     <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
-                        <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)">
+                        <a class="nav-item nav-link px-0" href="javascript:void(0)">
                             <i class="bx bx-menu bx-sm"></i>
                         </a>
                     </div>
 
                     <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
-                        <!-- Search -->
-                        <div class="navbar-nav align-items-center">
-                            <div class="nav-item d-flex align-items-center">
-                                <i class="bx bx-search fs-4 lh-0"></i>
-                                <input type="text" class="form-control border-0 shadow-none" placeholder="Search..." aria-label="Search..." />
-                            </div>
-                        </div>
-                        <!-- /Search -->
+                        <!-- Desktop sidebar toggle -->
+                        <button id="sidebarToggleBtn" class="sidebar-toggler d-none d-xl-flex" title="Toggle sidebar">
+                            <i class="bx bx-menu"></i>
+                        </button>
 
                         <ul class="navbar-nav flex-row align-items-center ms-auto">
                             <!-- Notifications -->
@@ -326,14 +419,14 @@
                                             <span class="align-middle">My Profile</span>
                                         </a>
                                     </li>
-                                    @can('superadmin')
+                                    @hasrole('superadmin')
                                     <li>
                                         <a class="dropdown-item" href="{{ route('admin.settings.index') }}">
                                             <i class="bx bx-cog me-2"></i>
                                             <span class="align-middle">Settings</span>
                                         </a>
                                     </li>
-                                    @endcan
+                                    @endhasrole
                                     <li>
                                         <div class="dropdown-divider"></div>
                                     </li>
@@ -358,24 +451,6 @@
                 <div class="content-wrapper">
                     <!-- Content -->
                     <div class="container-xxl flex-grow-1 container-p-y">
-                        <!-- Breadcrumb -->
-                        @hasSection('breadcrumb')
-                        <nav aria-label="breadcrumb">
-                            <ol class="breadcrumb breadcrumb-style1">
-                                <li class="breadcrumb-item">
-                                    <a href="{{ route('dashboard') }}">Home</a>
-                                </li>
-                                @yield('breadcrumb')
-                            </ol>
-                        </nav>
-                        @endif
-
-                        <!-- Page Title -->
-                        @hasSection('title')
-                        <h4 class="fw-bold py-3 mb-4">
-                            @yield('title')
-                        </h4>
-                        @endif
 
                         <!-- Alerts -->
                         @if(session('success'))
@@ -445,15 +520,54 @@
     <!-- Main JS -->
     <script src="{{ asset('assets/js/main.js') }}"></script>
 
-    <!-- Auto-hide alerts -->
+    <!-- Sidebar toggle fix + auto-hide alerts -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            var htmlEl = document.documentElement;
+            var layoutMenu = document.getElementById('layout-menu');
+            var STORAGE_KEY = 'ieams_sidebar_collapsed';
+            var BREAKPOINT = 1200;
+
+            // Restore collapsed state
+            if (localStorage.getItem(STORAGE_KEY) === 'true') {
+                htmlEl.classList.add('layout-menu-collapsed');
+            }
+
+            // Desktop sidebar toggle (navbar button)
+            var sidebarBtn = document.getElementById('sidebarToggleBtn');
+            if (sidebarBtn) {
+                sidebarBtn.addEventListener('click', function() {
+                    htmlEl.classList.remove('layout-menu-hover');
+                    var isCollapsed = htmlEl.classList.toggle('layout-menu-collapsed');
+                    localStorage.setItem(STORAGE_KEY, isCollapsed ? 'true' : 'false');
+                });
+            }
+
+            // Mobile hamburger — let Sneat handle it via .layout-menu-toggle
+            document.querySelectorAll('.layout-menu-toggle').forEach(function(toggler) {
+                toggler.addEventListener('click', function(e) {
+                    if (window.innerWidth < BREAKPOINT) return;
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                });
+            });
+
+            // Hover-expand: when collapsed, hovering the sidebar peeks the full menu
+            if (layoutMenu) {
+                layoutMenu.addEventListener('mouseenter', function() {
+                    if (window.innerWidth >= BREAKPOINT && htmlEl.classList.contains('layout-menu-collapsed')) {
+                        htmlEl.classList.add('layout-menu-hover');
+                    }
+                });
+                layoutMenu.addEventListener('mouseleave', function() {
+                    htmlEl.classList.remove('layout-menu-hover');
+                });
+            }
+
             // Auto-hide alerts after 5 seconds
             setTimeout(function() {
-                const alerts = document.querySelectorAll('.alert');
-                alerts.forEach(function(alert) {
-                    const bsAlert = new bootstrap.Alert(alert);
-                    bsAlert.close();
+                document.querySelectorAll('.alert').forEach(function(alert) {
+                    new bootstrap.Alert(alert).close();
                 });
             }, 5000);
         });

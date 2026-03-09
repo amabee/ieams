@@ -1,6 +1,5 @@
 @extends('layouts.app')
 @section('title','Audit Logs')
-@section('breadcrumb')<li class="breadcrumb-item active">Audit Logs</li>@endsection
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0 fw-bold">Audit Logs</h4>

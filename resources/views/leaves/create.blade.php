@@ -1,9 +1,5 @@
 @extends('layouts.app')
 @section('title','Request Leave')
-@section('breadcrumb')
-<li class="breadcrumb-item"><a href="{{ route('leaves.index') }}">Leaves</a></li>
-<li class="breadcrumb-item active">Request Leave</li>
-@endsection
 @section('content')
 <div class="row justify-content-center">
     <div class="col-md-8">

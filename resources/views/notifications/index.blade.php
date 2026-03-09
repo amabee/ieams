@@ -1,6 +1,5 @@
 @extends('layouts.app')
 @section('title','Notifications')
-@section('breadcrumb')<li class="breadcrumb-item active">Notifications</li>@endsection
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0 fw-bold">Notifications</h4>
