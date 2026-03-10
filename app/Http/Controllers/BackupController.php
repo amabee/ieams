@@ -28,4 +28,14 @@ class BackupController extends Controller
         }
         return response()->download($path);
     }
+
+    public function destroy(Backup $backup)
+    {
+        $path = storage_path('app/backups/' . $backup->filename);
+        if (file_exists($path)) {
+            @unlink($path);
+        }
+        $backup->delete();
+        return back()->with('success', 'Backup deleted.');
+    }
 }

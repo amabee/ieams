@@ -40,6 +40,7 @@ Route::middleware(['auth'])->group(function () {
   Route::resource('employees', EmployeeController::class)->middleware('can:view employees');
 
   // Shifts / Schedules
+  Route::get('shifts/data', [ShiftController::class, 'data'])->name('shifts.data')->middleware('can:view schedules');
   Route::resource('shifts', ShiftController::class);
 
   // Attendance Recording (Employee-facing)
@@ -78,20 +79,24 @@ Route::middleware(['auth'])->group(function () {
   Route::get('/forecasting', [ForecastController::class, 'index'])->name('forecasting.index');
   Route::get('/forecasting/data', [ForecastController::class, 'data'])->name('forecasting.data');
   Route::post('/forecasting/run', [ForecastController::class, 'run'])->name('forecasting.run');
+  Route::post('/forecasting/interpret', [ForecastController::class, 'interpret'])->name('forecasting.interpret');
 
   // Notifications
   Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
   Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
   Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
   Route::get('/notifications/poll', [NotificationController::class, 'poll'])->name('notifications.poll');
+  Route::get('/notifications/list', [NotificationController::class, 'list'])->name('notifications.list');
 
   // Audit Logs
-  Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+  Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index')->middleware('can:view audit logs');
+  Route::get('/audit-logs/data', [AuditLogController::class, 'data'])->name('audit-logs.data')->middleware('can:view audit logs');
 
   // Backups
   Route::get('/backups', [BackupController::class, 'index'])->name('backups.index');
   Route::post('/backups/run', [BackupController::class, 'run'])->name('backups.run');
   Route::get('/backups/{backup}/download', [BackupController::class, 'download'])->name('backups.download');
+  Route::delete('/backups/{backup}', [BackupController::class, 'destroy'])->name('backups.destroy')->middleware('can:manage backups');
 
   // Admin
   Route::prefix('admin')->name('admin.')->group(function () {

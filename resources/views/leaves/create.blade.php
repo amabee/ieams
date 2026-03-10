@@ -11,14 +11,22 @@
                 <form method="POST" action="{{ route('leaves.store') }}">
                     @csrf
                     
-                    @if($leaveBalance)
+                    @if($leaveBalances->isNotEmpty())
                     <div class="alert alert-info mb-4">
-                        <strong>Your Leave Balance:</strong>
-                        <div class="row mt-2">
-                            <div class="col-3"><small>Sick: <strong>{{ $leaveBalance->sick_leave_balance }}</strong></small></div>
-                            <div class="col-3"><small>Vacation: <strong>{{ $leaveBalance->vacation_leave_balance }}</strong></small></div>
-                            <div class="col-3"><small>Emergency: <strong>{{ $leaveBalance->emergency_leave_balance }}</strong></small></div>
-                            <div class="col-3"><small>Other: <strong>{{ $leaveBalance->other_leave_balance }}</strong></small></div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bx bx-wallet me-2"></i>
+                            <strong>Your Leave Balance ({{ now()->year }})</strong>
+                        </div>
+                        <div class="row g-2">
+                            @foreach($leaveBalances as $type => $balance)
+                            <div class="col-6 col-md-3">
+                                <small class="text-muted d-block">{{ ucfirst($type) }} Leave</small>
+                                <span class="fw-semibold {{ $balance->remaining_days <= 2 ? 'text-danger' : '' }}">
+                                    {{ $balance->remaining_days }} days left
+                                </span>
+                                <small class="text-muted d-block">({{ $balance->used_days }}/{{ $balance->total_days }} used)</small>
+                            </div>
+                            @endforeach
                         </div>
                     </div>
                     @endif

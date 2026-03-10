@@ -1175,7 +1175,7 @@
     (function pollNotifications() {
         const POLL_URL  = '{{ route('notifications.poll') }}';
         const CSRF      = '{{ csrf_token() }}';
-        const INTERVAL  = 5000;
+        const INTERVAL  = {{ config('notifications.poll_interval', 5000) }};
         let lastCount   = {{ auth()->user()->unreadNotifications()->count() }};
 
         function updateBadge(count) {

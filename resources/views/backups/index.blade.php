@@ -1,19 +1,24 @@
 @extends('layouts.app')
 @section('title','Database Backups')
+
+@push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+@endpush
+
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0 fw-bold">Database Backups</h4>
-    @can('run-backup')
+    @can('manage backups')
     <form method="POST" action="{{ route('backups.run') }}">
         @csrf
-        <button type="submit" class="btn btn-primary" onclick="return confirm('Run database backup now?')">
+        <button type="button" class="btn btn-primary" id="runBackupBtn">
             <i class="bi bi-hdd me-1"></i> Run Backup Now
         </button>
     </form>
     @endcan
 </div>
 
-<div class="alert alert-info">
+<div class="alert alert-info">a
     <i class="bi bi-info-circle me-2"></i>
     <strong>Automated Backups:</strong> Database backups run automatically every day at 2:00 AM via scheduled task.
 </div>
@@ -38,9 +43,9 @@
                 <tbody>
                     @forelse($backups as $backup)
                     <tr>
-                        <td>{{ $backup->backup_date->format('M d, Y') }}</td>
-                        <td><code class="small">{{ $backup->file_name }}</code></td>
-                        <td>{{ number_format($backup->file_size / 1024, 2) }} KB</td>
+                        <td>{{ $backup->created_at->format('M d, Y') }}</td>
+                        <td><code class="small">{{ $backup->filename }}</code></td>
+                        <td>{{ $backup->size_kb ? number_format($backup->size_kb, 2) . ' KB' : '—' }}</td>
                         <td>
                             @if($backup->status === 'success')
                             <span class="badge bg-success">Success</span>
@@ -50,15 +55,15 @@
                         </td>
                         <td><small>{{ $backup->created_at->format('M d, Y h:i A') }}</small></td>
                         <td>
-                            @if($backup->status === 'success' && Storage::exists('backups/'.$backup->file_name))
+                            @if($backup->status === 'success' && file_exists(storage_path('app/backups/'.$backup->filename)))
                             <a href="{{ route('backups.download', $backup) }}" class="btn btn-sm btn-outline-primary">
                                 <i class="bi bi-download"></i> Download
                             </a>
-                            @can('delete-backup')
+                            @can('manage backups')
                             <form method="POST" action="{{ route('backups.destroy', $backup) }}" class="d-inline">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this backup?')">
+                                <button type="button" class="btn btn-sm btn-outline-danger delete-backup-btn">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>
@@ -123,3 +128,45 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+$(function () {
+    // Run Backup
+    $('#runBackupBtn').on('click', function () {
+        Swal.fire({
+            title: 'Run Backup Now?',
+            text: 'This will create a full database backup immediately.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#696cff',
+            cancelButtonColor: '#8592a3',
+            confirmButtonText: 'Yes, run it!',
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                $('#runBackupBtn').closest('form').submit();
+            }
+        });
+    });
+
+    // Delete Backup
+    $(document).on('click', '.delete-backup-btn', function () {
+        const form = $(this).closest('form');
+        Swal.fire({
+            title: 'Delete Backup?',
+            text: 'This will permanently delete the backup file and record.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ff3e1d',
+            cancelButtonColor: '#8592a3',
+            confirmButtonText: 'Yes, delete it!',
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+    });
+});
+</script>
+@endpush

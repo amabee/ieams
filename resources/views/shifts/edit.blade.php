@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title','Edit Shift')
 @section('content')
-<div class="card shadow-sm border-0" style="max-width:540px">
+<div class="card shadow-sm border-0">
     <div class="card-header bg-white border-0 pt-3"><h6 class="mb-0 fw-semibold">Edit Shift — {{ $shift->name }}</h6></div>
     <div class="card-body">
         <form action="{{ route('shifts.update', $shift) }}" method="POST">

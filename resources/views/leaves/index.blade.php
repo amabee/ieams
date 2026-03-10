@@ -34,60 +34,36 @@
 @endif
 
 {{-- Leave Balance Cards (employees only) --}}
-@if($leaveBalance)
-<div class="row g-4 mb-4">
+@if($leaveBalances->isNotEmpty())
+@php
+$balanceConfig = [
+    'sick'      => ['label' => 'Sick',      'icon' => 'bx-plus-medical', 'color' => 'bg-label-danger'],
+    'vacation'  => ['label' => 'Vacation',  'icon' => 'bx-sun',          'color' => 'bg-label-success'],
+    'emergency' => ['label' => 'Emergency', 'icon' => 'bx-error',        'color' => 'bg-label-warning'],
+    'maternity' => ['label' => 'Maternity', 'icon' => 'bx-heart',        'color' => 'bg-label-pink'],
+    'paternity' => ['label' => 'Paternity', 'icon' => 'bx-user-check',   'color' => 'bg-label-primary'],
+    'unpaid'    => ['label' => 'Unpaid',    'icon' => 'bx-calendar-x',   'color' => 'bg-label-secondary'],
+    'other'     => ['label' => 'Other',     'icon' => 'bx-calendar',     'color' => 'bg-label-info'],
+];
+@endphp
+<div class="row g-3 mb-4">
+    @foreach($leaveBalances as $type => $balance)
+    @php $cfg = $balanceConfig[$type] ?? ['label' => ucfirst($type), 'icon' => 'bx-calendar', 'color' => 'bg-label-secondary']; @endphp
     <div class="col-6 col-md-3">
-        <div class="card text-center border-0 shadow-sm">
-            <div class="card-body">
-                <div class="avatar avatar-lg mx-auto mb-2">
-                    <span class="avatar-initial rounded-circle bg-label-danger">
-                        <i class="bx bx-plus-medical bx-sm"></i>
+        <div class="card text-center border-0 shadow-sm h-100">
+            <div class="card-body py-3">
+                <div class="avatar avatar-md mx-auto mb-2">
+                    <span class="avatar-initial rounded-circle {{ $cfg['color'] }}">
+                        <i class="bx {{ $cfg['icon'] }}"></i>
                     </span>
                 </div>
-                <h3 class="fw-bold mb-0">{{ $leaveBalance->sick_leave_balance ?? 0 }}</h3>
-                <small class="text-muted">Sick Leave</small>
+                <h3 class="fw-bold mb-0 {{ $balance->remaining_days <= 2 ? 'text-danger' : '' }}">{{ $balance->remaining_days }}</h3>
+                <small class="text-muted d-block">{{ $cfg['label'] }} Leave</small>
+                <small class="text-muted">{{ $balance->used_days }}/{{ $balance->total_days }} days used</small>
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-3">
-        <div class="card text-center border-0 shadow-sm">
-            <div class="card-body">
-                <div class="avatar avatar-lg mx-auto mb-2">
-                    <span class="avatar-initial rounded-circle bg-label-success">
-                        <i class="bx bx-sun bx-sm"></i>
-                    </span>
-                </div>
-                <h3 class="fw-bold mb-0">{{ $leaveBalance->vacation_leave_balance ?? 0 }}</h3>
-                <small class="text-muted">Vacation Leave</small>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="card text-center border-0 shadow-sm">
-            <div class="card-body">
-                <div class="avatar avatar-lg mx-auto mb-2">
-                    <span class="avatar-initial rounded-circle bg-label-warning">
-                        <i class="bx bx-error bx-sm"></i>
-                    </span>
-                </div>
-                <h3 class="fw-bold mb-0">{{ $leaveBalance->emergency_leave_balance ?? 0 }}</h3>
-                <small class="text-muted">Emergency Leave</small>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="card text-center border-0 shadow-sm">
-            <div class="card-body">
-                <div class="avatar avatar-lg mx-auto mb-2">
-                    <span class="avatar-initial rounded-circle bg-label-info">
-                        <i class="bx bx-calendar bx-sm"></i>
-                    </span>
-                </div>
-                <h3 class="fw-bold mb-0">{{ $leaveBalance->other_leave_balance ?? 0 }}</h3>
-                <small class="text-muted">Other Leave</small>
-            </div>
-        </div>
-    </div>
+    @endforeach
 </div>
 @endif
 

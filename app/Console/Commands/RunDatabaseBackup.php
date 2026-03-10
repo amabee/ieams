@@ -25,9 +25,10 @@ class RunDatabaseBackup extends Command
             mkdir($directory, 0755, true);
         }
 
-        $filePath = $directory . DIRECTORY_SEPARATOR . $filename;
-        $pwOption = $password ? "-p{$password}" : '';
-        $command  = "mysqldump -h {$host} -u {$user} {$pwOption} {$db} > \"{$filePath}\" 2>&1";
+        $filePath  = $directory . DIRECTORY_SEPARATOR . $filename;
+        $pwOption  = $password ? "-p{$password}" : '';
+        $mysqldump = config('backup.mysqldump_path', 'mysqldump');
+        $command   = "\"{$mysqldump}\" -h {$host} -u {$user} {$pwOption} {$db} > \"{$filePath}\" 2>&1";
 
         exec($command, $output, $returnCode);
 
@@ -35,6 +36,11 @@ class RunDatabaseBackup extends Command
         $sizeKb = ($returnCode === 0 && file_exists($filePath))
             ? (int) ceil(filesize($filePath) / 1024)
             : null;
+
+        // Remove the file if mysqldump failed (it contains the error message, not SQL)
+        if ($returnCode !== 0 && file_exists($filePath)) {
+            @unlink($filePath);
+        }
 
         Backup::create([
             'filename'   => $filename,

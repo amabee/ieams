@@ -32,7 +32,7 @@ class RoleSeeder extends Seeder
             // Reports
             'view reports', 'export reports',
             // Analytics
-            'view analytics', 'view forecasting',
+            'view analytics', 'view forecasting', 'run forecast',
             // System
             'view audit logs', 'manage backups', 'manage settings',
         ];
@@ -52,7 +52,7 @@ class RoleSeeder extends Seeder
             'view leaves', 'create leaves', 'approve leaves',
             'view schedules', 'create schedules', 'edit schedules',
             'view reports', 'export reports',
-            'view analytics', 'view forecasting',
+            'view analytics', 'view forecasting', 'run forecast',
             'view audit logs', 'manage backups', 'manage settings',
         ]);
 
@@ -62,7 +62,7 @@ class RoleSeeder extends Seeder
             'view leaves', 'approve leaves',
             'view schedules', 'create schedules', 'edit schedules',
             'view reports', 'export reports',
-            'view analytics', 'view forecasting',
+            'view analytics', 'view forecasting', 'run forecast',
         ]);
 
         Role::findByName('branch_manager')->syncPermissions([

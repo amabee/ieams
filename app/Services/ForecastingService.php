@@ -56,14 +56,14 @@ class ForecastingService
      *
      * @param float[] $data     Historical series
      * @param int     $horizon  Number of future steps to forecast
-     * @return float[]          Forecasted values
+     * @return array{values: float[], usedFallback: bool}
      */
     public function holtwinters(array $data, int $horizon): array
     {
         $n = count($data);
         if ($n < $this->period * 2) {
             // Not enough data — fall back to simple moving average
-            return $this->movingAverage($data, $horizon);
+            return ['values' => $this->movingAverage($data, $horizon), 'usedFallback' => true];
         }
 
         // Initialize seasonal components
@@ -94,7 +94,7 @@ class ForecastingService
             $forecast[] = max(0.0, round($predicted, 2));
         }
 
-        return $forecast;
+        return ['values' => $forecast, 'usedFallback' => false];
     }
 
     private function initSeasonals(array $data): array
@@ -133,7 +133,9 @@ class ForecastingService
             return;
         }
 
-        $predictions = $this->holtwinters($data, $horizon);
+        $result      = $this->holtwinters($data, $horizon);
+        $predictions = $result['values'];
+        $modelUsed   = $result['usedFallback'] ? 'moving_average' : 'holt_winters';
 
         // Get total employees for rate calculation
         $totalEmployees = $branch->employees()->where('status', 'active')->count();
@@ -150,8 +152,8 @@ class ForecastingService
                 [
                     'predicted_absent_count'      => (int) round($predictedCount),
                     'predicted_absenteeism_rate'  => $rate,
-                    'model_used'                  => 'holt_winters',
-                    'confidence_level'            => 75.0,
+                    'model_used'                  => $modelUsed,
+                    'confidence_level'            => $result['usedFallback'] ? 50.0 : 75.0,
                     'generated_at'                => $generatedAt,
                 ]
             );
@@ -161,9 +163,9 @@ class ForecastingService
     /**
      * Get stored forecasts for a branch within a date range.
      */
-    public function getForecast(int $branchId, string $fromDate, string $toDate): Collection
+    public function getForecast(?int $branchId, string $fromDate, string $toDate): Collection
     {
-        return Forecast::where('branch_id', $branchId)
+        return Forecast::when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->whereBetween('forecast_date', [$fromDate, $toDate])
             ->orderBy('forecast_date')
             ->get();

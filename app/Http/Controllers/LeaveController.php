@@ -34,18 +34,26 @@ class LeaveController extends Controller
         $approved = $all->where('status', 'approved');
         $denied   = $all->where('status', 'denied');
 
-        $leaveBalance = $employee ? LeaveBalance::where('employee_id', $employee->id)->first() : null;
+        $leaveBalances = $employee
+            ? LeaveBalance::where('employee_id', $employee->id)
+                          ->where('year', now()->year)
+                          ->get()->keyBy('leave_type')
+            : collect();
 
-        return view('leaves.index', compact('pending', 'approved', 'denied', 'leaveBalance'));
+        return view('leaves.index', compact('pending', 'approved', 'denied', 'leaveBalances'));
     }
 
     public function create()
     {
         $user         = auth()->user();
         $employee     = $user->employee;
-        $leaveBalance = $employee ? LeaveBalance::where('employee_id', $employee->id)->first() : null;
+        $leaveBalances = $employee
+            ? LeaveBalance::where('employee_id', $employee->id)
+                          ->where('year', now()->year)
+                          ->get()->keyBy('leave_type')
+            : collect();
 
-        return view('leaves.create', compact('leaveBalance'));
+        return view('leaves.create', compact('leaveBalances'));
     }
 
     public function store(Request $request)
@@ -58,7 +66,7 @@ class LeaveController extends Controller
         }
 
         $validated = $request->validate([
-            'leave_type' => 'required|in:sick,vacation,emergency,other',
+            'leave_type' => 'required|in:sick,vacation,emergency,maternity,paternity,unpaid,other',
             'start_date' => 'required|date|after_or_equal:today',
             'end_date'   => 'required|date|after_or_equal:start_date',
             'reason'     => 'required|string|max:500',
