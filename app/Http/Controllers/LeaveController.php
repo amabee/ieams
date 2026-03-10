@@ -38,7 +38,11 @@ class LeaveController extends Controller
 
     public function create()
     {
-        return view('leaves.create');
+        $user         = auth()->user();
+        $employee     = $user->employee;
+        $leaveBalance = $employee ? LeaveBalance::where('employee_id', $employee->id)->first() : null;
+
+        return view('leaves.create', compact('leaveBalance'));
     }
 
     public function store(Request $request)

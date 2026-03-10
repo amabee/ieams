@@ -1,6 +1,28 @@
 ﻿@extends('layouts.app')
 @section('title', 'Leave Requests')
 
+@push('styles')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<style>
+    .nav-tabs .nav-link {
+        color: var(--bs-body-color);
+        background: transparent !important;
+    }
+    .nav-tabs .nav-link.active {
+        color: var(--bs-primary) !important;
+        background: transparent !important;
+        border-bottom: 2px solid var(--bs-primary) !important;
+    }
+    .nav-tabs .nav-link:hover:not(.active) {
+        color: var(--bs-primary) !important;
+    }
+    .nav-tabs {
+        border-bottom-color: var(--bs-border-color) !important;
+    }
+</style>
+@endpush
+
 @section('content')
 
 @if(session('success'))
@@ -98,7 +120,7 @@
                 </button>
             </li>
         </ul>
-        @can('submit-leave')
+        @can('create leaves')
         <a href="{{ route('leaves.create') }}" class="btn btn-primary btn-sm ms-3 flex-shrink-0">
             <i class="bx bx-plus me-1"></i> Request Leave
         </a>
@@ -107,9 +129,10 @@
     <div class="tab-content">
 
         {{-- Pending Tab --}}
+        @php $canApprove = auth()->user()?->can('approve leaves'); @endphp
         <div class="tab-pane fade show active" id="tabPending">
             <div class="card-datatable table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table id="tablePending" class="table table-hover align-middle w-100">
                     <thead>
                         <tr>
                             <th class="ps-4">Employee</th>
@@ -120,11 +143,11 @@
                             <th>Days</th>
                             <th>Reason</th>
                             <th>Submitted</th>
-                            @can('approve-leave')<th class="text-center pe-4">Actions</th>@endcan
+                            @if($canApprove)<th class="text-center pe-4">Actions</th>@endif
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($pending as $leave)
+                        @foreach($pending as $leave)
                         @php $initial = strtoupper(substr($leave->employee->first_name ?? 'U', 0, 1)); @endphp
                         <tr>
                             <td class="ps-4">
@@ -153,35 +176,27 @@
                             <td><span class="badge bg-label-secondary">{{ $leave->total_days ?? $leave->days ?? '' }} days</span></td>
                             <td><small class="text-muted">{{ Str::limit($leave->reason, 40) }}</small></td>
                             <td><small class="text-muted">{{ $leave->created_at->diffForHumans() }}</small></td>
-                            @can('approve-leave')
+                            @if($canApprove)
                             <td class="text-center pe-4">
-                                <div class="d-flex justify-content-center gap-2">
-                                    <form method="POST" action="{{ route('leaves.approve', $leave) }}">
+                                <div class="d-flex justify-content-center gap-1">
+                                    <form class="swal-approve-form" method="POST" action="{{ route('leaves.approve', $leave) }}">
                                         @csrf
-                                        <button type="submit" class="btn btn-sm btn-success rounded-pill px-3"
-                                            onclick="return confirm('Approve this leave request?')">
-                                            <i class="bx bx-check me-1"></i> Approve
+                                        <button type="button" class="btn btn-icon btn-sm btn-success swal-approve-btn" title="Approve">
+                                            <i class="bx bx-check"></i>
                                         </button>
                                     </form>
-                                    <form method="POST" action="{{ route('leaves.deny', $leave) }}">
+                                    <form class="swal-deny-form" method="POST" action="{{ route('leaves.deny', $leave) }}">
                                         @csrf
-                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3"
-                                            onclick="return confirm('Deny this leave request?')">
-                                            <i class="bx bx-x me-1"></i> Deny
+                                        <input type="hidden" name="comment" class="deny-comment-input">
+                                        <button type="button" class="btn btn-icon btn-sm btn-outline-danger swal-deny-btn" title="Deny">
+                                            <i class="bx bx-x"></i>
                                         </button>
                                     </form>
                                 </div>
                             </td>
-                            @endcan
+                            @endif
                         </tr>
-                        @empty
-                        <tr>
-                            <td colspan="9" class="text-center py-5 text-muted">
-                                <i class="bx bx-calendar-x d-block mb-2" style="font-size:2rem"></i>
-                                No pending leave requests.
-                            </td>
-                        </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
             </div>
@@ -190,7 +205,7 @@
         {{-- Approved Tab --}}
         <div class="tab-pane fade" id="tabApproved">
             <div class="card-datatable table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table id="tableApproved" class="table table-hover align-middle w-100">
                     <thead>
                         <tr>
                             <th class="ps-4">Employee</th>
@@ -205,7 +220,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($approved as $leave)
+                        @foreach($approved as $leave)
                         @php $initial = strtoupper(substr($leave->employee->first_name ?? 'U', 0, 1)); @endphp
                         <tr>
                             <td class="ps-4">
@@ -232,14 +247,7 @@
                             <td>{{ $leave->reviewer->name ?? '' }}</td>
                             <td><small class="text-muted">{{ $leave->updated_at->format('M d, Y') }}</small></td>
                         </tr>
-                        @empty
-                        <tr>
-                            <td colspan="9" class="text-center py-5 text-muted">
-                                <i class="bx bx-calendar-check d-block mb-2" style="font-size:2rem"></i>
-                                No approved leave requests.
-                            </td>
-                        </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
             </div>
@@ -248,7 +256,7 @@
         {{-- Denied Tab --}}
         <div class="tab-pane fade" id="tabDenied">
             <div class="card-datatable table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table id="tableDenied" class="table table-hover align-middle w-100">
                     <thead>
                         <tr>
                             <th class="ps-4">Employee</th>
@@ -259,11 +267,12 @@
                             <th>Days</th>
                             <th>Reason</th>
                             <th>Denied By</th>
+                            <th>Denial Reason</th>
                             <th>Date</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($denied as $leave)
+                        @foreach($denied as $leave)
                         @php $initial = strtoupper(substr($leave->employee->first_name ?? 'U', 0, 1)); @endphp
                         <tr>
                             <td class="ps-4">
@@ -288,16 +297,16 @@
                             <td><span class="badge bg-label-secondary">{{ $leave->total_days ?? $leave->days ?? '' }} days</span></td>
                             <td><small class="text-muted">{{ Str::limit($leave->reason, 40) }}</small></td>
                             <td>{{ $leave->reviewer->name ?? '' }}</td>
+                            <td>
+                                @if($leave->review_comment)
+                                <small class="text-danger">{{ $leave->review_comment }}</small>
+                                @else
+                                <small class="text-muted">—</small>
+                                @endif
+                            </td>
                             <td><small class="text-muted">{{ $leave->updated_at->format('M d, Y') }}</small></td>
                         </tr>
-                        @empty
-                        <tr>
-                            <td colspan="9" class="text-center py-5 text-muted">
-                                <i class="bx bx-calendar-x d-block mb-2" style="font-size:2rem"></i>
-                                No denied leave requests.
-                            </td>
-                        </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
             </div>
@@ -307,3 +316,84 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+$(function () {
+    const dtConfig = {
+        pageLength: 25,
+        dom: "<'dt-top-bar'lf>t<'d-flex align-items-center justify-content-between flex-wrap px-3 pb-2'ip>",
+        language: {
+            search: '',
+            searchPlaceholder: 'Search...',
+            lengthMenu: 'Show _MENU_ entries',
+            emptyTable: 'No records found.',
+            zeroRecords: 'No matching records found.',
+            paginate: {
+                previous: '<i class="bx bx-chevron-left"></i>',
+                next:     '<i class="bx bx-chevron-right"></i>',
+            },
+        },
+        columnDefs: [{ orderable: false, targets: -1 }],
+    };
+
+    const tPending  = $('#tablePending').DataTable(dtConfig);
+    const tApproved = $('#tableApproved').DataTable(dtConfig);
+    const tDenied   = $('#tableDenied').DataTable(dtConfig);
+
+    // DataTables in hidden tabs need a redraw when the tab is shown
+    $('[data-bs-target="#tabApproved"]').on('shown.bs.tab', function () {
+        tApproved.columns.adjust().draw(false);
+    });
+    $('[data-bs-target="#tabDenied"]').on('shown.bs.tab', function () {
+        tDenied.columns.adjust().draw(false);
+    });
+
+    // Approve confirmation
+    $(document).on('click', '.swal-approve-btn', function () {
+        const form = $(this).closest('form');
+        Swal.fire({
+            title: 'Approve Leave?',
+            text: 'This will approve the employee\'s leave request.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Approve',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+        }).then(result => {
+            if (result.isConfirmed) form[0].submit();
+        });
+    });
+
+    // Deny confirmation
+    $(document).on('click', '.swal-deny-btn', function () {
+        const form = $(this).closest('form');
+        Swal.fire({
+            title: 'Deny Leave?',
+            text: 'Please provide a reason for the denial.',
+            input: 'textarea',
+            inputPlaceholder: 'Enter reason for denial...',
+            inputAttributes: { rows: 3 },
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Deny',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            inputValidator: (value) => {
+                if (!value || !value.trim()) return 'Please provide a reason for the denial.';
+            },
+        }).then(result => {
+            if (result.isConfirmed) {
+                form.find('.deny-comment-input').val(result.value);
+                form[0].submit();
+            }
+        });
+    });
+});
+</script>
+@endpush
