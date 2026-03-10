@@ -8,14 +8,15 @@
                 <h5 class="mb-0 fw-bold"><i class="bi bi-file-earmark-text me-2"></i>Generate Report</h5>
             </div>
             <div class="card-body">
-                <form method="GET" action="{{ route('reports.generate') }}" id="reportForm">
+                <form method="POST" action="{{ route('reports.generate') }}" id="reportForm">
+                    @csrf
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Report Type</label>
-                        <select name="type" class="form-select" required>
-                            <option value="attendance">Attendance Report</option>
-                            <option value="summary">Attendance Summary</option>
-                            <option value="leave">Leave Report</option>
-                            <option value="employee">Employee Report</option>
+                        <select name="report_type" class="form-select" required>
+                            <option value="daily">Daily Attendance</option>
+                            <option value="weekly">Weekly Attendance</option>
+                            <option value="monthly">Monthly Attendance</option>
+                            <option value="annual">Annual Attendance</option>
                         </select>
                     </div>
 
@@ -37,7 +38,7 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Branch</label>
-                        <select name="branch" class="form-select">
+                        <select name="branch_id" class="form-select">
                             <option value="">All Branches</option>
                             @foreach($branches as $b)
                             <option value="{{ $b->id }}">{{ $b->name }}</option>
@@ -47,7 +48,7 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Employee (Optional)</label>
-                        <input type="text" name="employee" class="form-control" placeholder="Employee name or number">
+                        <input type="text" name="employee_id" class="form-control" placeholder="Employee name or number">
                     </div>
 
                     <div class="mb-3">
@@ -89,11 +90,11 @@
                                     <div class="flex-grow-1 ms-3">
                                         <h6 class="fw-bold">This Week's Attendance</h6>
                                         <p class="text-muted small mb-2">Generate attendance report for current week</p>
-                                        <a href="{{ route('reports.generate', ['type'=>'attendance','date_from'=>now()->startOfWeek()->format('Y-m-d'),'date_to'=>now()->endOfWeek()->format('Y-m-d'),'format'=>'pdf']) }}" 
+                                        <a href="{{ route('reports.generate', ['report_type'=>'weekly','date_from'=>now()->startOfWeek()->format('Y-m-d'),'date_to'=>now()->endOfWeek()->format('Y-m-d'),'format'=>'pdf']) }}" 
                                            class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-file-pdf me-1"></i> PDF
                                         </a>
-                                        <a href="{{ route('reports.generate', ['type'=>'attendance','date_from'=>now()->startOfWeek()->format('Y-m-d'),'date_to'=>now()->endOfWeek()->format('Y-m-d'),'format'=>'excel']) }}" 
+                                        <a href="{{ route('reports.generate', ['report_type'=>'weekly','date_from'=>now()->startOfWeek()->format('Y-m-d'),'date_to'=>now()->endOfWeek()->format('Y-m-d'),'format'=>'excel']) }}" 
                                            class="btn btn-sm btn-outline-success">
                                             <i class="bi bi-file-excel me-1"></i> Excel
                                         </a>
@@ -113,11 +114,11 @@
                                     <div class="flex-grow-1 ms-3">
                                         <h6 class="fw-bold">This Month's Attendance</h6>
                                         <p class="text-muted small mb-2">Generate attendance report for current month</p>
-                                        <a href="{{ route('reports.generate', ['type'=>'attendance','date_from'=>now()->startOfMonth()->format('Y-m-d'),'date_to'=>now()->endOfMonth()->format('Y-m-d'),'format'=>'pdf']) }}" 
+                                        <a href="{{ route('reports.generate', ['report_type'=>'monthly','date_from'=>now()->startOfMonth()->format('Y-m-d'),'date_to'=>now()->endOfMonth()->format('Y-m-d'),'format'=>'pdf']) }}" 
                                            class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-file-pdf me-1"></i> PDF
                                         </a>
-                                        <a href="{{ route('reports.generate', ['type'=>'attendance','date_from'=>now()->startOfMonth()->format('Y-m-d'),'date_to'=>now()->endOfMonth()->format('Y-m-d'),'format'=>'excel']) }}" 
+                                        <a href="{{ route('reports.generate', ['report_type'=>'monthly','date_from'=>now()->startOfMonth()->format('Y-m-d'),'date_to'=>now()->endOfMonth()->format('Y-m-d'),'format'=>'excel']) }}" 
                                            class="btn btn-sm btn-outline-success">
                                             <i class="bi bi-file-excel me-1"></i> Excel
                                         </a>
@@ -137,11 +138,11 @@
                                     <div class="flex-grow-1 ms-3">
                                         <h6 class="fw-bold">Attendance Summary</h6>
                                         <p class="text-muted small mb-2">Statistical summary of attendance</p>
-                                        <a href="{{ route('reports.generate', ['type'=>'summary','date_from'=>now()->startOfMonth()->format('Y-m-d'),'date_to'=>now()->format('Y-m-d'),'format'=>'pdf']) }}" 
+                                        <a href="{{ route('reports.generate', ['report_type'=>'monthly','date_from'=>now()->startOfMonth()->format('Y-m-d'),'date_to'=>now()->format('Y-m-d'),'format'=>'pdf']) }}" 
                                            class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-file-pdf me-1"></i> PDF
                                         </a>
-                                        <a href="{{ route('reports.generate', ['type'=>'summary','date_from'=>now()->startOfMonth()->format('Y-m-d'),'date_to'=>now()->format('Y-m-d'),'format'=>'excel']) }}" 
+                                        <a href="{{ route('reports.generate', ['report_type'=>'monthly','date_from'=>now()->startOfMonth()->format('Y-m-d'),'date_to'=>now()->format('Y-m-d'),'format'=>'excel']) }}" 
                                            class="btn btn-sm btn-outline-success">
                                             <i class="bi bi-file-excel me-1"></i> Excel
                                         </a>
@@ -161,11 +162,11 @@
                                     <div class="flex-grow-1 ms-3">
                                         <h6 class="fw-bold">Leave Report</h6>
                                         <p class="text-muted small mb-2">Summary of leave requests</p>
-                                        <a href="{{ route('reports.generate', ['type'=>'leave','date_from'=>now()->startOfMonth()->format('Y-m-d'),'date_to'=>now()->format('Y-m-d'),'format'=>'pdf']) }}" 
+                                        <a href="{{ route('reports.generate', ['report_type'=>'monthly','date_from'=>now()->startOfMonth()->format('Y-m-d'),'date_to'=>now()->format('Y-m-d'),'format'=>'pdf']) }}" 
                                            class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-file-pdf me-1"></i> PDF
                                         </a>
-                                        <a href="{{ route('reports.generate', ['type'=>'leave','date_from'=>now()->startOfMonth()->format('Y-m-d'),'date_to'=>now()->format('Y-m-d'),'format'=>'excel']) }}" 
+                                        <a href="{{ route('reports.generate', ['report_type'=>'monthly','date_from'=>now()->startOfMonth()->format('Y-m-d'),'date_to'=>now()->format('Y-m-d'),'format'=>'excel']) }}" 
                                            class="btn btn-sm btn-outline-success">
                                             <i class="bi bi-file-excel me-1"></i> Excel
                                         </a>

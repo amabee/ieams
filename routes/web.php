@@ -67,7 +67,7 @@ Route::middleware(['auth'])->group(function () {
 
   // Reports
   Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-  Route::post('/reports/generate', [ReportController::class, 'generate'])->name('reports.generate');
+  Route::match(['GET', 'POST'], '/reports/generate', [ReportController::class, 'generate'])->name('reports.generate');
   Route::get('/reports/download/{type}', [ReportController::class, 'download'])->name('reports.download');
 
   // Analytics

@@ -46,7 +46,15 @@ class ReportController extends Controller
         ];
 
         if ($validated['format'] === 'pdf') {
-            $pdf = Pdf::loadView('reports.attendance-pdf', compact('records', 'summary', 'validated'))
+            $title      = ucfirst($validated['report_type']) . ' Attendance Report';
+            $reportType = ucfirst($validated['report_type']);
+            $dateFrom   = $validated['date_from'];
+            $dateTo     = $validated['date_to'];
+            $branch     = isset($validated['branch_id'])
+                ? Branch::find($validated['branch_id'])?->name
+                : 'All Branches';
+
+            $pdf = Pdf::loadView('reports.attendance-pdf', compact('records', 'summary', 'validated', 'title', 'reportType', 'dateFrom', 'dateTo', 'branch'))
                 ->setPaper('a4', 'landscape');
             return $pdf->download('attendance-report-' . now()->format('Y-m-d') . '.pdf');
         }

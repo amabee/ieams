@@ -123,32 +123,69 @@
     <div class="card-header bg-white py-3">
         <h6 class="mb-0 fw-semibold">Top Performing Employees</h6>
     </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0" id="topPerformersTable">
-                <thead class="table-light">
-                    <tr>
-                        <th>Rank</th>
-                        <th>Employee</th>
-                        <th>Branch</th>
-                        <th>Present Days</th>
-                        <th>Late Days</th>
-                        <th>Attendance Rate</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td colspan="6" class="text-center text-muted py-3">Loading...</td></tr>
-                </tbody>
-            </table>
-        </div>
+    <div class="card-body">
+        <table class="table table-hover w-100" id="topPerformersTable">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Employee</th>
+                    <th>Branch</th>
+                    <th>Present Days</th>
+                    <th>Late Days</th>
+                    <th>Attendance Rate</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
     </div>
 </div>
 @endsection
 
+@push('styles')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+@endpush
+
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
 <script>
 let trendChart, statusChart, branchChart, punctualityChart;
+
+const performersTable = $('#topPerformersTable').DataTable({
+    columns: [
+        {
+            data: null,
+            orderable: false,
+            searchable: false,
+            render: (data, type, row, meta) => {
+                const i = meta.row;
+                const cls = i === 0 ? 'bg-warning text-dark' : i === 1 ? 'bg-secondary' : 'bg-light text-dark';
+                return `<span class="badge ${cls}">${i + 1}</span>`;
+            }
+        },
+        {
+            data: null,
+            render: data => `<div class="fw-semibold">${data.name}</div><small class="text-muted">${data.employee_no}</small>`
+        },
+        { data: 'branch' },
+        {
+            data: 'present_days',
+            render: data => `<span class="badge bg-success">${data}</span>`
+        },
+        {
+            data: 'late_days',
+            render: data => `<span class="badge bg-warning text-dark">${data}</span>`
+        },
+        {
+            data: 'attendance_rate',
+            render: data => `<strong>${data}%</strong>`
+        }
+    ],
+    order: [[5, 'desc']],
+    pageLength: 10,
+    language: { emptyTable: 'No data available' }
+});
 
 function loadAnalytics() {
     const branch = document.getElementById('branchFilter').value;
@@ -226,24 +263,7 @@ function loadAnalytics() {
             });
             
             // Top Performers Table
-            const tbody = document.querySelector('#topPerformersTable tbody');
-            if (data.topPerformers.length) {
-                tbody.innerHTML = data.topPerformers.map((emp, idx) => `
-                    <tr>
-                        <td><span class="badge ${idx===0?'bg-warning':idx===1?'bg-secondary':'bg-light text-dark'}">${idx+1}</span></td>
-                        <td>
-                            <div class="fw-semibold">${emp.name}</div>
-                            <small class="text-muted">${emp.employee_no}</small>
-                        </td>
-                        <td>${emp.branch}</td>
-                        <td><span class="badge bg-success">${emp.present_days}</span></td>
-                        <td><span class="badge bg-warning">${emp.late_days}</span></td>
-                        <td><strong>${emp.attendance_rate}%</strong></td>
-                    </tr>
-                `).join('');
-            } else {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">No data available</td></tr>';
-            }
+            performersTable.clear().rows.add(data.topPerformers).draw();
         })
         .catch(err => console.error('Analytics load failed:', err));
 }

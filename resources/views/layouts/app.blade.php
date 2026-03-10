@@ -370,38 +370,53 @@
                                         <div class="dropdown-header d-flex align-items-center py-3">
                                             <h5 class="text-body mb-0 me-auto">Notifications</h5>
                                             @if($unread > 0)
-                                            <span class="badge badge-sm bg-label-primary">{{ $unread }} New</span>
+                                            <form method="POST" action="{{ route('notifications.read-all') }}" class="ms-2">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size:0.75rem">
+                                                    Mark all read
+                                                </button>
+                                            </form>
                                             @endif
                                         </div>
                                     </li>
                                     <li class="dropdown-notifications-list scrollable-container">
-                                        <ul class="list-group list-group-flush">
+                                        <ul class="list-group list-group-flush" id="notif-list">
                                             @forelse(auth()->user()->unreadNotifications->take(5) as $notification)
-                                            <li class="list-group-item list-group-item-action dropdown-notifications-item">
-                                                <div class="d-flex">
-                                                    <div class="flex-shrink-0 me-3">
-                                                        <div class="avatar">
-                                                            <span class="avatar-initial rounded-circle bg-label-primary"><i class="bx bx-bell"></i></span>
-                                                        </div>
+                                            <li class="list-group-item list-group-item-action dropdown-notifications-item px-3 py-2"
+                                                data-notif-id="{{ $notification->id }}">
+                                                <div class="d-flex align-items-start gap-3">
+                                                    <div class="avatar flex-shrink-0">
+                                                        <span class="avatar-initial rounded-circle bg-label-{{ $notification->data['color'] ?? 'primary' }}">
+                                                            <i class="bx {{ $notification->data['icon'] ?? 'bx-bell' }}"></i>
+                                                        </span>
                                                     </div>
-                                                    <div class="flex-grow-1">
-                                                        <h6 class="mb-1">{{ $notification->data['title'] ?? 'Notification' }}</h6>
-                                                        <p class="mb-0">{{ $notification->data['message'] ?? '' }}</p>
+                                                    <div class="flex-grow-1 overflow-hidden">
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <h6 class="mb-0 text-truncate">{{ $notification->data['title'] ?? 'Notification' }}</h6>
+                                                            <button type="button"
+                                                                class="btn-close btn-close-sm ms-2 flex-shrink-0 mark-read-btn"
+                                                                title="Mark as read"
+                                                                data-id="{{ $notification->id }}"
+                                                                data-url="{{ route('notifications.read', $notification->id) }}"
+                                                                style="font-size:0.6rem"></button>
+                                                        </div>
+                                                        <p class="mb-0 small text-muted text-truncate">{{ $notification->data['message'] ?? '' }}</p>
                                                         <small class="text-muted">{{ $notification->created_at->diffForHumans() }}</small>
                                                     </div>
                                                 </div>
                                             </li>
                                             @empty
-                                            <li class="list-group-item">
+                                            <li class="list-group-item" id="notif-empty">
                                                 <div class="text-center py-3">
-                                                    <span class="text-muted">No new notifications</span>
+                                                    <i class="bx bx-bell-off d-block mb-1 text-muted" style="font-size:1.5rem"></i>
+                                                    <span class="text-muted small">You're all caught up!</span>
                                                 </div>
                                             </li>
                                             @endforelse
                                         </ul>
                                     </li>
                                     <li class="dropdown-menu-footer border-top">
-                                        <a href="{{ route('notifications.index') }}" class="dropdown-item d-flex justify-content-center p-3">
+                                        <a href="{{ route('notifications.index') }}" class="dropdown-item d-flex justify-content-center p-3 small">
                                             View all notifications
                                         </a>
                                     </li>
@@ -1154,11 +1169,12 @@
 
     @stack('scripts')
 
-    {{-- Notification polling (every 30s) --}}
+    {{-- Notification polling (every 5s) --}}
     @auth
     <script>
     (function pollNotifications() {
         const POLL_URL  = '{{ route('notifications.poll') }}';
+        const CSRF      = '{{ csrf_token() }}';
         const INTERVAL  = 5000;
         let lastCount   = {{ auth()->user()->unreadNotifications()->count() }};
 
@@ -1180,33 +1196,41 @@
             }
         }
 
-        function updateDropdown(items) {
-            const list = document.querySelector('.dropdown-notifications-list .list-group');
-            if (!list) return;
-            list.innerHTML = items.length
-                ? items.map(n => `
-                    <li class="list-group-item list-group-item-action dropdown-notifications-item">
-                        <div class="d-flex">
-                            <div class="flex-shrink-0 me-3">
-                                <div class="avatar">
-                                    <span class="avatar-initial rounded-circle bg-label-${n.color}"><i class="bx ${n.icon}"></i></span>
-                                </div>
-                            </div>
-                            <div class="flex-grow-1">
-                                <h6 class="mb-1">${n.title}</h6>
-                                <p class="mb-0 small">${n.message}</p>
-                                <small class="text-muted">${n.time}</small>
-                            </div>
+        function buildItem(n) {
+            return `
+            <li class="list-group-item list-group-item-action dropdown-notifications-item px-3 py-2" data-notif-id="${n.id}">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="avatar flex-shrink-0">
+                        <span class="avatar-initial rounded-circle bg-label-${n.color}"><i class="bx ${n.icon}"></i></span>
+                    </div>
+                    <div class="flex-grow-1 overflow-hidden">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h6 class="mb-0 text-truncate">${n.title}</h6>
+                            <button type="button" class="btn-close btn-close-sm ms-2 flex-shrink-0 mark-read-btn"
+                                title="Mark as read" data-id="${n.id}"
+                                data-url="/notifications/${n.id}/read"
+                                style="font-size:0.6rem"></button>
                         </div>
-                    </li>`).join('')
-                : `<li class="list-group-item"><div class="text-center py-3"><span class="text-muted">No new notifications</span></div></li>`;
+                        <p class="mb-0 small text-muted text-truncate">${n.message}</p>
+                        <small class="text-muted">${n.time}</small>
+                    </div>
+                </div>
+            </li>`;
+        }
 
-            // Update "X New" badge in dropdown header
-            const headerBadge = document.querySelector('.dropdown-menu-header .badge-sm');
-            if (headerBadge) {
-                headerBadge.textContent = items.length > 0 ? items.length + ' New' : '';
-                headerBadge.style.display = items.length > 0 ? '' : 'none';
-            }
+        function showEmpty() {
+            return `<li class="list-group-item" id="notif-empty">
+                <div class="text-center py-3">
+                    <i class="bx bx-bell-off d-block mb-1 text-muted" style="font-size:1.5rem"></i>
+                    <span class="text-muted small">You're all caught up!</span>
+                </div>
+            </li>`;
+        }
+
+        function updateDropdown(items) {
+            const list = document.querySelector('#notif-list');
+            if (!list) return;
+            list.innerHTML = items.length ? items.map(buildItem).join('') : showEmpty();
         }
 
         function poll() {
@@ -1219,8 +1243,29 @@
                         updateDropdown(data.items);
                     }
                 })
-                .catch(() => {}); // silently fail
+                .catch(() => {});
         }
+
+        // Mark single notification as read
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.mark-read-btn');
+            if (!btn) return;
+            e.stopPropagation();
+            const id  = btn.dataset.id;
+            const url = btn.dataset.url;
+            fetch(url, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': CSRF, 'X-Requested-With': 'XMLHttpRequest' },
+            }).then(() => {
+                const item = document.querySelector(`[data-notif-id="${id}"]`);
+                if (item) item.remove();
+                lastCount = Math.max(0, lastCount - 1);
+                updateBadge(lastCount);
+                if (!document.querySelector('#notif-list .dropdown-notifications-item')) {
+                    document.querySelector('#notif-list').innerHTML = showEmpty();
+                }
+            }).catch(() => {});
+        });
 
         setInterval(poll, INTERVAL);
     })();
