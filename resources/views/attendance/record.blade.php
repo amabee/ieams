@@ -14,7 +14,7 @@
                 @else
                 <div class="mb-3">
                     <div class="fw-semibold">{{ $employee->full_name }}</div>
-                    <small class="text-muted">{{ $employee->branch->name ?? '' }} • {{ $employee->position }}</small>
+                    <small class="text-muted">{{ $employee->branch->name ?? '' }} • {{ $employee->position->title ?? '' }}</small>
                 </div>
 
                 @if($todayRecord)

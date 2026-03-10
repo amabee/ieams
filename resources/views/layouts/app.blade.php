@@ -134,6 +134,27 @@
 
     <link rel="stylesheet" href="{{ asset('css/customizer.css') }}">
     @stack('styles')
+    <style>
+        /* DataTables Bootstrap5: active pagination follows customizer primary color */
+        .dataTables_wrapper .dataTables_paginate .page-item.active .page-link,
+        .dataTables_wrapper .dataTables_paginate .page-item.active .page-link:hover {
+            background-color: var(--bs-primary) !important;
+            border-color: var(--bs-primary) !important;
+            color: #fff !important;
+        }
+        .dataTables_wrapper .dataTables_paginate .page-item:not(.disabled):not(.active) .page-link:hover {
+            background-color: rgba(var(--bs-primary-rgb), 0.08) !important;
+            border-color: transparent !important;
+            color: var(--bs-primary) !important;
+        }
+        /* Fallback for non-Bootstrap DataTables rendering */
+        .dataTables_wrapper .paginate_button.current,
+        .dataTables_wrapper .paginate_button.current:hover {
+            background: var(--bs-primary) !important;
+            border-color: var(--bs-primary) !important;
+            color: #fff !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -844,7 +865,8 @@
         /* DataTables */
         '.dataTables_wrapper .dataTables_length select,.dataTables_wrapper .dataTables_filter input { background-color:#323348 !important; color:#a3a4cc !important; border-color:rgba(255,255,255,0.15) !important; }',
         '.dataTables_wrapper .dataTables_info,.dataTables_wrapper .dataTables_paginate .paginate_button { color:#a3a4cc !important; }',
-        '.dataTables_wrapper .dataTables_paginate .paginate_button.current { background:#696cff !important; color:#fff !important; border-color:#696cff !important; }',
+        '.dataTables_wrapper .dataTables_paginate .page-item.active .page-link,.dataTables_wrapper .dataTables_paginate .page-item.active .page-link:hover { background-color:var(--bs-primary) !important; border-color:var(--bs-primary) !important; color:#fff !important; }',
+        '.dataTables_wrapper .dataTables_paginate .paginate_button.current,.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover { background:var(--bs-primary) !important; border-color:var(--bs-primary) !important; color:#fff !important; }',
         /* page wrapper */
         '.layout-page,.content-wrapper { background-color:#232333 !important; }',
         /* scrollbar */
