@@ -52,7 +52,8 @@ Route::middleware(['auth'])->group(function () {
   Route::get('/attendance/monitor/data', [AttendanceMonitorController::class, 'data'])->name('attendance.monitor.data');
 
   // Attendance Management (HR/Admin)
-  Route::get('/attendance/manage', [AttendanceManagementController::class, 'index'])->name('attendance.manage');
+  Route::get('/attendance/manage', [AttendanceManagementController::class, 'index'])->name('attendance.manage')->middleware('can:view users');
+  Route::get('/attendance/manage/data', [AttendanceManagementController::class, 'data'])->name('attendance.manage.data');
   Route::get('/attendance/manage/{record}/edit', [AttendanceManagementController::class, 'edit'])->name('attendance.manage.edit');
   Route::put('/attendance/manage/{record}', [AttendanceManagementController::class, 'update'])->name('attendance.manage.update');
   Route::get('/attendance/corrections', [AttendanceManagementController::class, 'corrections'])->name('attendance.corrections');

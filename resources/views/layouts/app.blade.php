@@ -822,6 +822,7 @@
         '.navbar-nav .nav-link { color:#a3a4cc !important; }',
         /* sidebar */
         '.layout-menu,.bg-menu-theme { background-color:#2b2c40 !important; }',
+        '.bg-menu-theme .menu-inner-shadow { background:linear-gradient(#2b2c40 41%,rgba(43,44,64,0.11) 95%,rgba(43,44,64,0)) !important; }',
         '.bg-menu-theme .menu-link,.bg-menu-theme .menu-header { color:#a3a4cc !important; }',
         '.bg-menu-theme .menu-link:hover { color:#cfd3ec !important; background:rgba(255,255,255,0.06) !important; }',
         '.bg-menu-theme .menu-item.active > .menu-link { background:rgba(105,108,255,0.15) !important; }',

@@ -26,8 +26,14 @@ class LeaveController extends Controller
             $query->whereHas('employee', fn ($q) => $q->where('branch_id', $user->branch_id));
         }
 
-        $leaves = $query->paginate(15);
-        return view('leaves.index', compact('leaves'));
+        $all      = $query->get();
+        $pending  = $all->where('status', 'pending');
+        $approved = $all->where('status', 'approved');
+        $denied   = $all->where('status', 'denied');
+
+        $leaveBalance = $employee ? LeaveBalance::where('employee_id', $employee->id)->first() : null;
+
+        return view('leaves.index', compact('pending', 'approved', 'denied', 'leaveBalance'));
     }
 
     public function create()
