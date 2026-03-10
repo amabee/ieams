@@ -67,7 +67,7 @@ class AnalyticsController extends Controller
         ];
 
         // --- By Branch (bar chart) ---
-        $branchRaw = AttendanceRecord::where('date', '>=', $start)
+        $branchRaw = (clone $base)
             ->selectRaw('branch_id, COUNT(*) as total')
             ->groupBy('branch_id')
             ->with('branch:id,name')

@@ -191,7 +191,7 @@ function loadAnalytics() {
     const branch = document.getElementById('branchFilter').value;
     const period = document.getElementById('periodFilter').value;
     
-    fetch(`{{ route('analytics.data') }}?branch=${branch}&period=${period}`)
+    fetch(`{{ route('analytics.data') }}?branch_id=${branch}&period=${period}`)
         .then(r => r.json())
         .then(data => {
             // Update summary cards
