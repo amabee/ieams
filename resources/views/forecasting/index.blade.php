@@ -10,7 +10,7 @@
             @endforeach
         </select>
         @can('run-forecast')
-        <form method="POST" action="{{ route('forecast.run') }}" class="d-inline">
+        <form method="POST" action="{{ route('forecasting.run') }}" class="d-inline">
             @csrf
             <button type="submit" class="btn btn-sm btn-primary" onclick="return confirm('Run attendance forecast for all branches? This may take a few moments.')">
                 <i class="bi bi-lightning-charge me-1"></i> Run Forecast
@@ -104,7 +104,7 @@ let forecastChart;
 function loadForecast() {
     const branchId = document.getElementById('branchFilter').value;
     
-    fetch(`{{ route('forecast.data') }}?branch=${branchId}`)
+    fetch(`{{ route('forecasting.data') }}?branch_id=${branchId}`)
         .then(r => r.json())
         .then(data => {
             // Update summary stats
