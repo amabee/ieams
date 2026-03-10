@@ -32,9 +32,11 @@ Route::middleware(['auth'])->group(function () {
   Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
   // Branches
+  Route::get('branches/data', [BranchController::class, 'data'])->name('branches.data')->middleware('can:view branches');
   Route::resource('branches', BranchController::class)->middleware('can:view branches');
 
   // Employees
+  Route::get('employees/data', [EmployeeController::class, 'data'])->name('employees.data')->middleware('can:view employees');
   Route::resource('employees', EmployeeController::class)->middleware('can:view employees');
 
   // Shifts / Schedules
@@ -91,6 +93,7 @@ Route::middleware(['auth'])->group(function () {
 
   // Admin
   Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('users/data', [UserController::class, 'data'])->name('users.data');
     Route::resource('users', UserController::class);
     Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');

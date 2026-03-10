@@ -132,6 +132,7 @@
         }
     </style>
 
+    <link rel="stylesheet" href="{{ asset('css/customizer.css') }}">
     @stack('styles')
 </head>
 
@@ -484,7 +485,7 @@
                     <!-- / Content -->
 
                     <!-- Footer -->
-                    <footer class="content-footer footer bg-footer-theme">
+                    <!-- <footer class="content-footer footer bg-footer-theme">
                         <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
                             <div class="mb-2 mb-md-0">
                                 © {{ date('Y') }}, made with ❤️ by <strong>IEAMS Team</strong>
@@ -495,7 +496,7 @@
                                 <a href="#" class="footer-link">Support</a>
                             </div>
                         </div>
-                    </footer>
+                    </footer> -->
                     <!-- / Footer -->
 
                     <div class="content-backdrop fade"></div>
@@ -510,9 +511,564 @@
     </div>
     <!-- / Layout wrapper -->
 
-    <!-- Core JS -->
+<!-- ===== Template Customizer ===== -->
+<button id="customizerFab" title="Customize">
+    <i class="bi bi-sliders"></i>
+</button>
+
+<div id="customizerPanel">
+    <div class="customizer-header">
+        <div>
+            <h6>Template Customizer</h6>
+            <small>Customize &amp; preview in real time</small>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button class="customizer-close" id="customizerReset" title="Reset to defaults"><i class="bi bi-arrow-counterclockwise"></i></button>
+            <button class="customizer-close" id="customizerClose"><i class="bi bi-x-lg"></i></button>
+        </div>
+    </div>
+    <div class="customizer-body">
+
+        <!-- THEMING -->
+        <span class="customizer-section-label">Theming</span>
+
+        <div class="customizer-group-label">Primary Color</div>
+        <div class="color-swatches mb-3">
+            <div class="color-swatch active" data-color="purple"  style="background:#696cff; color:#696cff" title="Purple"></div>
+            <div class="color-swatch" data-color="teal"   style="background:#03c3ec; color:#03c3ec" title="Teal"></div>
+            <div class="color-swatch" data-color="amber"  style="background:#ffab00; color:#ffab00" title="Amber"></div>
+            <div class="color-swatch" data-color="rose"   style="background:#ff3e1d; color:#ff3e1d" title="Rose"></div>
+            <div class="color-swatch" data-color="blue"   style="background:#0d6efd; color:#0d6efd" title="Blue"></div>
+            <div class="color-swatch custom-swatch" data-color="custom" title="Custom">
+                <i class="bi bi-palette text-white"></i>
+                <input type="color" id="customColorPicker" style="opacity:0;position:absolute;width:100%;height:100%;cursor:pointer;border:none;padding:0" value="#696cff">
+            </div>
+        </div>
+
+        <div class="customizer-group-label">Theme</div>
+        <div class="option-cards mb-3" id="themeOptions">
+            <div class="option-card active" data-theme="light" style="width:90px">
+                <div style="background:#f5f5f9;padding:.5rem .75rem;font-size:.65rem;font-weight:700;opacity:.5">LIGHT</div>
+                <div style="background:#f5f5f9;height:40px;display:flex;gap:4px;padding:4px 6px">
+                    <div style="width:24px;background:#fff;border-radius:2px"></div>
+                    <div style="flex:1;background:#fff;border-radius:2px"></div>
+                </div>
+                <div class="option-card-label">Light</div>
+            </div>
+            <div class="option-card" data-theme="dark" style="width:90px">
+                <div style="background:#2b2c40;padding:.5rem .75rem;font-size:.65rem;font-weight:700;opacity:.5;color:#fff">DARK</div>
+                <div style="background:#2b2c40;height:40px;display:flex;gap:4px;padding:4px 6px">
+                    <div style="width:24px;background:#3b3c53;border-radius:2px"></div>
+                    <div style="flex:1;background:#3b3c53;border-radius:2px"></div>
+                </div>
+                <div class="option-card-label">Dark</div>
+            </div>
+            <div class="option-card" data-theme="system" style="width:90px">
+                <div style="background:linear-gradient(90deg,#f5f5f9 50%,#2b2c40 50%);padding:.5rem .75rem;font-size:.65rem;font-weight:700;opacity:.5">SYS</div>
+                <div style="background:linear-gradient(90deg,#f5f5f9 50%,#2b2c40 50%);height:40px;display:flex;gap:4px;padding:4px 6px">
+                    <div style="width:24px;background:rgba(255,255,255,.5);border-radius:2px"></div>
+                    <div style="flex:1;background:rgba(255,255,255,.3);border-radius:2px"></div>
+                </div>
+                <div class="option-card-label">System</div>
+            </div>
+        </div>
+
+        <div class="customizer-group-label">Skin</div>
+        <div class="option-cards mb-3" id="skinOptions">
+            <div class="option-card active" data-skin="default" style="width:120px">
+                <div style="height:60px;background:#f5f5f9;display:flex;gap:4px;padding:6px">
+                    <div style="width:28px;background:#fff;border-radius:2px"></div>
+                    <div style="flex:1;display:flex;flex-direction:column;gap:3px">
+                        <div style="height:8px;background:#fff;border-radius:2px"></div>
+                        <div style="flex:1;background:#ebebeb;border-radius:2px"></div>
+                    </div>
+                </div>
+                <div class="option-card-label">Default</div>
+            </div>
+            <div class="option-card" data-skin="bordered" style="width:120px">
+                <div style="height:60px;background:#f5f5f9;display:flex;gap:4px;padding:6px">
+                    <div style="width:28px;background:#fff;border-radius:2px;border:1px solid #ddd"></div>
+                    <div style="flex:1;display:flex;flex-direction:column;gap:3px">
+                        <div style="height:8px;background:#fff;border-radius:2px;border:1px solid #ddd"></div>
+                        <div style="flex:1;background:#ebebeb;border-radius:2px"></div>
+                    </div>
+                </div>
+                <div class="option-card-label">Bordered</div>
+            </div>
+        </div>
+
+        <hr class="customizer-divider">
+
+        <!-- LAYOUT -->
+        <span class="customizer-section-label">Layout</span>
+
+        <div class="customizer-group-label">Menu (Navigation)</div>
+        <div class="option-cards mb-3" id="menuOptions">
+            <div class="option-card active" data-menu="expanded" style="width:120px">
+                <div style="height:60px;background:#f5f5f9;display:flex;gap:4px;padding:6px">
+                    <div style="width:32px;background:#696cff;border-radius:2px;opacity:.7"></div>
+                    <div style="flex:1;display:flex;flex-direction:column;gap:3px">
+                        <div style="height:8px;background:#fff;border-radius:2px"></div>
+                        <div style="flex:1;background:#ebebeb;border-radius:2px"></div>
+                    </div>
+                </div>
+                <div class="option-card-label">Expanded</div>
+            </div>
+            <div class="option-card" data-menu="collapsed" style="width:120px">
+                <div style="height:60px;background:#f5f5f9;display:flex;gap:4px;padding:6px">
+                    <div style="width:12px;background:#696cff;border-radius:2px;opacity:.7"></div>
+                    <div style="flex:1;display:flex;flex-direction:column;gap:3px">
+                        <div style="height:8px;background:#fff;border-radius:2px"></div>
+                        <div style="flex:1;background:#ebebeb;border-radius:2px"></div>
+                    </div>
+                </div>
+                <div class="option-card-label">Collapsed</div>
+            </div>
+        </div>
+
+        <div class="customizer-group-label">Navbar Type</div>
+        <div class="option-cards mb-3" id="navbarOptions">
+            <div class="option-card active" data-navbar="sticky" style="width:86px">
+                <div style="height:55px;background:#f5f5f9;display:flex;flex-direction:column;gap:3px;padding:4px 5px">
+                    <div style="height:8px;background:#696cff;border-radius:2px;opacity:.7"></div>
+                    <div style="flex:1;background:#ebebeb;border-radius:2px"></div>
+                </div>
+                <div class="option-card-label">Sticky</div>
+            </div>
+            <div class="option-card" data-navbar="static" style="width:86px">
+                <div style="height:55px;background:#f5f5f9;display:flex;flex-direction:column;gap:3px;padding:4px 5px">
+                    <div style="height:8px;background:#fff;border-radius:2px;border:1px solid #ddd"></div>
+                    <div style="flex:1;background:#ebebeb;border-radius:2px"></div>
+                </div>
+                <div class="option-card-label">Static</div>
+            </div>
+            <div class="option-card" data-navbar="hidden" style="width:86px">
+                <div style="height:55px;background:#f5f5f9;display:flex;flex-direction:column;gap:3px;padding:4px 5px">
+                    <div style="flex:1;background:#ebebeb;border-radius:2px;margin-top:11px"></div>
+                </div>
+                <div class="option-card-label">Hidden</div>
+            </div>
+        </div>
+
+        <div class="customizer-group-label">Content</div>
+        <div class="option-cards mb-3" id="contentOptions">
+            <div class="option-card" data-content="compact" style="width:120px">
+                <div style="height:60px;background:#f5f5f9;padding:5px;display:flex;align-items:center;justify-content:center">
+                    <div style="width:60%;height:100%;background:#fff;border-radius:2px;display:flex;flex-direction:column;gap:3px;padding:4px">
+                        <div style="height:6px;background:#ebebeb;border-radius:1px"></div>
+                        <div style="height:6px;background:#ebebeb;border-radius:1px"></div>
+                    </div>
+                </div>
+                <div class="option-card-label">Compact</div>
+            </div>
+            <div class="option-card active" data-content="wide" style="width:120px">
+                <div style="height:60px;background:#f5f5f9;padding:5px">
+                    <div style="width:100%;height:100%;background:#fff;border-radius:2px;display:flex;flex-direction:column;gap:3px;padding:4px">
+                        <div style="height:6px;background:#ebebeb;border-radius:1px"></div>
+                        <div style="height:6px;background:#ebebeb;border-radius:1px"></div>
+                    </div>
+                </div>
+                <div class="option-card-label">Wide</div>
+            </div>
+        </div>
+
+        <div class="customizer-group-label">Direction</div>
+        <div class="option-cards mb-3" id="directionOptions">
+            <div class="option-card active" data-dir="ltr" style="width:120px">
+                <div style="height:55px;background:#f5f5f9;padding:5px;display:flex;flex-direction:column;gap:3px">
+                    <div style="height:8px;background:#fff;border-radius:2px;display:flex;align-items:center;padding:0 4px"><div style="width:60%;height:3px;background:#ddd;border-radius:1px"></div></div>
+                    <div style="height:8px;background:#fff;border-radius:2px;display:flex;align-items:center;padding:0 4px"><div style="width:40%;height:3px;background:#ddd;border-radius:1px"></div></div>
+                    <div style="height:8px;background:#fff;border-radius:2px;display:flex;align-items:center;padding:0 4px"><div style="width:80%;height:3px;background:#ddd;border-radius:1px"></div></div>
+                </div>
+                <div class="option-card-label">Left to Right (En)</div>
+            </div>
+            <div class="option-card" data-dir="rtl" style="width:120px">
+                <div style="height:55px;background:#f5f5f9;padding:5px;display:flex;flex-direction:column;gap:3px">
+                    <div style="height:8px;background:#fff;border-radius:2px;display:flex;align-items:center;justify-content:flex-end;padding:0 4px"><div style="width:60%;height:3px;background:#ddd;border-radius:1px"></div></div>
+                    <div style="height:8px;background:#fff;border-radius:2px;display:flex;align-items:center;justify-content:flex-end;padding:0 4px"><div style="width:40%;height:3px;background:#ddd;border-radius:1px"></div></div>
+                    <div style="height:8px;background:#fff;border-radius:2px;display:flex;align-items:center;justify-content:flex-end;padding:0 4px"><div style="width:80%;height:3px;background:#ddd;border-radius:1px"></div></div>
+                </div>
+                <div class="option-card-label">Right to Left (Ar)</div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Customizer Backdrop -->
+<div id="customizerBackdrop" style="display:none;position:fixed;inset:0;z-index:1094;background:rgba(34,48,74,.5)"></div>
+
+<script>
+(function () {
+    var STORAGE_KEY = 'ieams_customizer';
+    var html = document.documentElement;
+
+    var defaults = {
+        color:   'purple',
+        customHex: '#696cff',
+        theme:   'light',
+        skin:    'default',
+        menu:    'expanded',
+        navbar:  'sticky',
+        content: 'wide',
+        dir:     'ltr',
+    };
+
+    var colorMap = {
+        purple: '#696cff',
+        teal:   '#03c3ec',
+        amber:  '#ffab00',
+        rose:   '#ff3e1d',
+        blue:   '#0d6efd',
+    };
+
+    function load() {
+        try { return Object.assign({}, defaults, JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')); }
+        catch(e) { return Object.assign({}, defaults); }
+    }
+    function save(cfg) { localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg)); }
+
+    function hexToRgb(hex) {
+        hex = hex.replace('#','');
+        if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+        var n = parseInt(hex, 16);
+        return ((n>>16)&255)+','+(((n>>8)&255))+','+(n&255);
+    }
+
+    function darken(hex, pct) {
+        hex = hex.replace('#','');
+        if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+        var n = parseInt(hex,16), r = Math.max(0,((n>>16)&255)-pct), g = Math.max(0,((n>>8)&255)-pct), b = Math.max(0,(n&255)-pct);
+        return '#'+[r,g,b].map(function(v){return v.toString(16).padStart(2,'0');}).join('');
+    }
+
+    // ── Color ────────────────────────────────────────────────────────────
+    function applyColor(color, customHex) {
+        var hex = (color === 'custom' && customHex) ? customHex : (colorMap[color] || '#696cff');
+        var rgb = hexToRgb(hex);
+        var dark = darken(hex, 20);
+
+        // CSS variable override
+        var el = document.getElementById('customizer-color-style');
+        if (!el) { el = document.createElement('style'); el.id = 'customizer-color-style'; document.head.appendChild(el); }
+        el.textContent = [
+            ':root {',
+            '  --bs-primary: '+hex+';',
+            '  --bs-primary-rgb: '+rgb+';',
+            '  --bs-link-color: '+hex+';',
+            '  --bs-link-hover-color: '+dark+';',
+            '}',
+            '.btn-primary { background-color:'+hex+' !important; border-color:'+hex+' !important; }',
+            '.btn-primary:hover,.btn-primary:focus,.btn-primary:active { background-color:'+dark+' !important; border-color:'+dark+' !important; }',
+            '.btn-outline-primary { color:'+hex+' !important; border-color:'+hex+' !important; }',
+            '.btn-outline-primary:hover { background-color:'+hex+' !important; color:#fff !important; }',
+            '.text-primary { color:'+hex+' !important; }',
+            '.bg-primary { background-color:'+hex+' !important; }',
+            '.badge.bg-primary { background-color:'+hex+' !important; }',
+            'a:not(.btn):not(.nav-link):not(.menu-link):not(.dropdown-item) { color:'+hex+'; }',
+            '.menu-item.active > .menu-link, .menu-link.active { color:'+hex+' !important; background-color: rgba('+rgb+',.1) !important; }',
+            '.menu-item.active > .menu-link i, .menu-link.active i { color:'+hex+' !important; }',
+        ].join('\n');
+
+        // FAB color
+        var fab = document.getElementById('customizerFab');
+        if (fab) { fab.style.background = hex; fab.style.boxShadow = '-3px 0 12px '+hex+'88'; }
+    }
+
+    // ── Theme ────────────────────────────────────────────────────────────
+    var DARK_CSS = [
+        /* root overrides */
+        ':root {',
+        '  --bs-body-bg: #232333;',
+        '  --bs-body-bg-rgb: 35,35,51;',
+        '  --bs-body-color: #a3a4cc;',
+        '  --bs-body-color-rgb: 163,164,204;',
+        '  --bs-border-color: rgba(255,255,255,0.1);',
+        '  --bs-secondary-bg: #2b2c40;',
+        '  --bs-tertiary-bg: #323348;',
+        '  --bs-heading-color: #cfd3ec;',
+        '  --bs-secondary-color: rgba(163,164,204,0.6);',
+        '}',
+        /* body */
+        'body { background-color:#232333 !important; color:#a3a4cc !important; }',
+        /* headings */
+        'h1,h2,h3,h4,h5,h6,.h1,.h2,.h3,.h4,.h5,.h6 { color:#cfd3ec !important; }',
+        /* cards */
+        '.card { background-color:#2b2c40 !important; border-color:rgba(255,255,255,0.08) !important; }',
+        '.card-header,.card-footer { background-color:#2b2c40 !important; border-color:rgba(255,255,255,0.08) !important; }',
+        /* navbar */
+        '#layout-navbar,.layout-navbar { background-color:#2b2c40 !important; border-bottom-color:rgba(255,255,255,0.08) !important; }',
+        '.navbar-nav .nav-link { color:#a3a4cc !important; }',
+        /* sidebar */
+        '.layout-menu,.bg-menu-theme { background-color:#2b2c40 !important; }',
+        '.bg-menu-theme .menu-link,.bg-menu-theme .menu-header { color:#a3a4cc !important; }',
+        '.bg-menu-theme .menu-link:hover { color:#cfd3ec !important; background:rgba(255,255,255,0.06) !important; }',
+        '.bg-menu-theme .menu-item.active > .menu-link { background:rgba(105,108,255,0.15) !important; }',
+        /* tables */
+        '.table { --bs-table-bg:#2b2c40; --bs-table-color:#a3a4cc; --bs-table-border-color:rgba(255,255,255,0.08); color:#a3a4cc; }',
+        '.table th { color:#cfd3ec !important; }',
+        '.table-striped>tbody>tr:nth-of-type(odd)>* { --bs-table-accent-bg:rgba(255,255,255,0.03); }',
+        '.table td,.table th { border-color:rgba(255,255,255,0.08) !important; }',
+        /* inputs */
+        '.form-label,.col-form-label { color:#a3a4cc !important; }',
+        '.form-control,.form-select { background-color:#323348 !important; border-color:rgba(255,255,255,0.15) !important; color:#a3a4cc !important; }',
+        '.form-control::placeholder { color:rgba(163,164,204,0.4) !important; }',
+        '.form-control:focus,.form-select:focus { background-color:#3a3b52 !important; border-color:rgba(105,108,255,0.5) !important; box-shadow:0 0 0 0.2rem rgba(105,108,255,0.15) !important; }',
+        '.input-group-text { background-color:#323348 !important; border-color:rgba(255,255,255,0.15) !important; color:#a3a4cc !important; }',
+        'input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus,textarea:-webkit-autofill,select:-webkit-autofill { -webkit-text-fill-color:#a3a4cc !important; -webkit-box-shadow:0 0 0px 1000px #323348 inset !important; transition: background-color 5000s ease-in-out 0s; }',
+        'select option { background-color:#323348; color:#a3a4cc; }',
+        /* dropdowns */
+        '.dropdown-menu { background-color:#2b2c40 !important; border-color:rgba(255,255,255,0.1) !important; }',
+        '.dropdown-item { color:#a3a4cc !important; }',
+        '.dropdown-item:hover,.dropdown-item:focus { background-color:rgba(255,255,255,0.06) !important; color:#cfd3ec !important; }',
+        '.dropdown-divider { border-color:rgba(255,255,255,0.1) !important; }',
+        '.dropdown-header { color:rgba(163,164,204,0.5) !important; }',
+        /* modals */
+        '.modal-content { background-color:#2b2c40 !important; border-color:rgba(255,255,255,0.08) !important; }',
+        '.modal-header,.modal-footer { border-color:rgba(255,255,255,0.08) !important; }',
+        /* list groups */
+        '.list-group-item { background-color:#2b2c40 !important; border-color:rgba(255,255,255,0.08) !important; color:#a3a4cc !important; }',
+        /* badges / alerts */
+        '.alert { border-color:rgba(255,255,255,0.08) !important; }',
+        /* text utilities */
+        '.text-muted { color:rgba(163,164,204,0.5) !important; }',
+        '.text-dark { color:#cfd3ec !important; }',
+        '.text-body { color:#a3a4cc !important; }',
+        /* borders */
+        '.border,.border-top,.border-end,.border-bottom,.border-start { border-color:rgba(255,255,255,0.1) !important; }',
+        /* hr */
+        'hr { border-color:rgba(255,255,255,0.1) !important; opacity:1; }',
+        /* breadcrumb */
+        '.breadcrumb-item,.breadcrumb-item a { color:#a3a4cc !important; }',
+        '.breadcrumb-item.active { color:rgba(163,164,204,0.6) !important; }',
+        /* DataTables */
+        '.dataTables_wrapper .dataTables_length select,.dataTables_wrapper .dataTables_filter input { background-color:#323348 !important; color:#a3a4cc !important; border-color:rgba(255,255,255,0.15) !important; }',
+        '.dataTables_wrapper .dataTables_info,.dataTables_wrapper .dataTables_paginate .paginate_button { color:#a3a4cc !important; }',
+        '.dataTables_wrapper .dataTables_paginate .paginate_button.current { background:#696cff !important; color:#fff !important; border-color:#696cff !important; }',
+        /* page wrapper */
+        '.layout-page,.content-wrapper { background-color:#232333 !important; }',
+        /* scrollbar */
+        '::-webkit-scrollbar-track { background:#232333; }',
+        '::-webkit-scrollbar-thumb { background:#3a3b52; }',
+        '::-webkit-scrollbar-thumb:hover { background:#4a4b62; }',
+    ].join('\n');
+
+    function applyTheme(theme) {
+        var resolved = theme === 'system'
+            ? (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+            : theme;
+
+        var darkEl = document.getElementById('customizer-dark-style');
+
+        if (resolved === 'dark') {
+            html.classList.remove('light-style');
+            html.classList.add('dark-style');
+            html.setAttribute('data-bs-theme', 'dark');
+            if (!darkEl) {
+                darkEl = document.createElement('style');
+                darkEl.id = 'customizer-dark-style';
+                document.head.appendChild(darkEl);
+            }
+            darkEl.textContent = DARK_CSS;
+        } else {
+            html.classList.remove('dark-style');
+            html.classList.add('light-style');
+            html.setAttribute('data-bs-theme', 'light');
+            if (darkEl) darkEl.textContent = '';
+        }
+    }
+
+    // ── Skin ─────────────────────────────────────────────────────────────
+    // Sneat Free only ships theme-default.css; bordered is a visual-only overlay.
+    function applySkin(skin) {
+        var isBordered = skin === 'bordered';
+        html.setAttribute('data-theme', 'theme-default');
+        // Apply bordered look via injected style (no separate CSS file needed)
+        var skinEl = document.getElementById('customizer-skin-style');
+        if (!skinEl) { skinEl = document.createElement('style'); skinEl.id = 'customizer-skin-style'; document.head.appendChild(skinEl); }
+        if (isBordered) {
+            skinEl.textContent = [
+                '.card { box-shadow:none !important; border:1px solid var(--bs-border-color) !important; }',
+                '.layout-menu { border-right:1px solid var(--bs-border-color) !important; box-shadow:none !important; }',
+                '#layout-navbar { border-bottom:1px solid var(--bs-border-color) !important; box-shadow:none !important; }',
+            ].join('\n');
+        } else {
+            skinEl.textContent = '';
+        }
+    }
+
+    // ── Menu ─────────────────────────────────────────────────────────────
+    function applyMenu(menu) {
+        if (menu === 'collapsed') {
+            html.classList.add('layout-menu-collapsed');
+            localStorage.setItem('ieams_sidebar_collapsed', '1');
+        } else {
+            html.classList.remove('layout-menu-collapsed');
+            html.classList.remove('layout-menu-hover');
+            localStorage.removeItem('ieams_sidebar_collapsed');
+        }
+        // Fix content padding after menu state change
+        var layoutPage = document.querySelector('.layout-page');
+        if (layoutPage) layoutPage.style.transition = 'padding-left 0.35s ease';
+    }
+
+    // ── Navbar ───────────────────────────────────────────────────────────
+    function applyNavbar(navbar) {
+        var nav = document.getElementById('layout-navbar');
+        if (!nav) return;
+        if (navbar === 'hidden') {
+            nav.style.display = 'none';
+        } else {
+            nav.style.display = '';
+            if (navbar === 'sticky') {
+                nav.style.position = 'sticky';
+                nav.style.top = '0';
+                nav.style.zIndex = '1020';
+            } else {
+                // static — scrolls with page
+                nav.style.position = 'relative';
+                nav.style.top = '';
+                nav.style.zIndex = '';
+            }
+        }
+    }
+
+    // ── Content ──────────────────────────────────────────────────────────
+    function applyContent(content) {
+        // Target the main content container (has flex-grow-1), not the navbar container
+        var container = document.querySelector('.content-wrapper .container-xxl, div.container-xxl.flex-grow-1');
+        if (!container) container = document.querySelector('.container-xxl.flex-grow-1');
+        if (!container) return;
+        if (content === 'compact') {
+            container.style.maxWidth = '1140px';
+            container.style.marginLeft = 'auto';
+            container.style.marginRight = 'auto';
+        } else {
+            container.style.maxWidth = '';
+            container.style.marginLeft = '';
+            container.style.marginRight = '';
+        }
+    }
+
+    // ── Direction ────────────────────────────────────────────────────────
+    function applyDir(dir) {
+        html.setAttribute('dir', dir);
+        document.body && document.body.setAttribute('dir', dir);
+    }
+
+    function applyAll(cfg) {
+        applyColor(cfg.color, cfg.customHex);
+        applyTheme(cfg.theme);
+        applySkin(cfg.skin);
+        applyMenu(cfg.menu);
+        applyNavbar(cfg.navbar);
+        applyContent(cfg.content);
+        applyDir(cfg.dir);
+    }
+
+    // ── UI sync ───────────────────────────────────────────────────────────
+    function syncUI(cfg) {
+        document.querySelectorAll('.color-swatch').forEach(function(el) {
+            el.classList.toggle('active', el.dataset.color === cfg.color);
+        });
+        var picker = document.getElementById('customColorPicker');
+        if (picker && cfg.customHex) picker.value = cfg.customHex;
+
+        var groups = [
+            ['themeOptions','theme'],['skinOptions','skin'],['menuOptions','menu'],
+            ['navbarOptions','navbar'],['contentOptions','content'],['directionOptions','dir']
+        ];
+        groups.forEach(function(pair) {
+            var wrap = document.getElementById(pair[0]);
+            if (!wrap) return;
+            wrap.querySelectorAll('.option-card').forEach(function(card) {
+                var val = card.dataset.theme || card.dataset.skin || card.dataset.menu ||
+                          card.dataset.navbar || card.dataset.content || card.dataset.dir;
+                card.classList.toggle('active', val === cfg[pair[1]]);
+            });
+        });
+    }
+
+    // ── Boot (pre-DOMContentLoaded: apply silently) ───────────────────────
+    var cfg = load();
+    // Apply non-visual-flash things immediately
+    applyTheme(cfg.theme);
+    applyDir(cfg.dir);
+    applyMenu(cfg.menu);
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Apply rest after DOM ready
+        applyColor(cfg.color, cfg.customHex);
+        applySkin(cfg.skin);
+        applyNavbar(cfg.navbar);
+        applyContent(cfg.content);
+        syncUI(cfg);
+
+        var panel    = document.getElementById('customizerPanel');
+        var fab      = document.getElementById('customizerFab');
+        var closeBtn = document.getElementById('customizerClose');
+        var resetBtn = document.getElementById('customizerReset');
+        var backdrop = document.getElementById('customizerBackdrop');
+
+        function openPanel()  { panel.classList.add('open'); backdrop.style.display = 'block'; }
+        function closePanel() { panel.classList.remove('open'); backdrop.style.display = 'none'; }
+
+        fab.addEventListener('click', openPanel);
+        closeBtn.addEventListener('click', closePanel);
+        backdrop.addEventListener('click', closePanel);
+
+        resetBtn.addEventListener('click', function () {
+            cfg = Object.assign({}, defaults);
+            save(cfg); applyAll(cfg); syncUI(cfg);
+        });
+
+        // Color swatches
+        document.querySelectorAll('.color-swatch:not(.custom-swatch)').forEach(function(el) {
+            el.addEventListener('click', function() {
+                cfg.color = el.dataset.color;
+                save(cfg); applyColor(cfg.color, cfg.customHex); syncUI(cfg);
+            });
+        });
+
+        // Custom color picker
+        var picker = document.getElementById('customColorPicker');
+        if (picker) {
+            picker.addEventListener('input', function() {
+                cfg.color = 'custom'; cfg.customHex = picker.value;
+                save(cfg); applyColor('custom', picker.value); syncUI(cfg);
+            });
+        }
+
+        // Option cards
+        function bindOptions(containerId, cfgKey, applyFn) {
+            var wrap = document.getElementById(containerId);
+            if (!wrap) return;
+            wrap.querySelectorAll('.option-card').forEach(function(card) {
+                card.addEventListener('click', function() {
+                    var val = card.dataset.theme || card.dataset.skin || card.dataset.menu ||
+                              card.dataset.navbar || card.dataset.content || card.dataset.dir;
+                    cfg[cfgKey] = val;
+                    save(cfg); applyFn(val); syncUI(cfg);
+                });
+            });
+        }
+
+        bindOptions('themeOptions',     'theme',   applyTheme);
+        bindOptions('skinOptions',      'skin',    applySkin);
+        bindOptions('menuOptions',      'menu',    applyMenu);
+        bindOptions('navbarOptions',    'navbar',  applyNavbar);
+        bindOptions('contentOptions',   'content', applyContent);
+        bindOptions('directionOptions', 'dir',     applyDir);
+
+        if (window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function() {
+                if (cfg.theme === 'system') applyTheme('system');
+            });
+        }
+    });
+}());
+</script>
     <script src="{{ asset('assets/vendor/libs/jquery/jquery.js') }}"></script>
-    <script src="{{ asset('assets/vendor/libs/popper/popper.js') }}"></script>
     <script src="{{ asset('assets/vendor/js/bootstrap.js') }}"></script>
     <script src="{{ asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js') }}"></script>
     <script src="{{ asset('assets/vendor/js/menu.js') }}"></script>

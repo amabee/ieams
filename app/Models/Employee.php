@@ -15,12 +15,16 @@ class Employee extends Model
 
     protected $fillable = [
         'employee_no', 'first_name', 'last_name', 'middle_name',
-        'position', 'employment_type', 'branch_id', 'shift_id',
+        'position_id', 'employment_type', 'branch_id', 'shift_id',
         'hire_date', 'status', 'photo_path', 'contact_no', 'address',
+        'birthdate', 'gender', 'civil_status',
+        'basic_salary', 'sss_no', 'philhealth_no', 'pagibig_no', 'tin_no',
     ];
 
     protected $casts = [
-        'hire_date' => 'date',
+        'hire_date'    => 'date',
+        'birthdate'    => 'date',
+        'basic_salary' => 'decimal:2',
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -36,6 +40,11 @@ class Employee extends Model
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    public function position(): BelongsTo
+    {
+        return $this->belongsTo(Position::class);
     }
 
     public function shift(): BelongsTo

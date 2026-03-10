@@ -1,0 +1,33 @@
+#employeeTable_wrapper .dataTables_length select,
+#employeeTable_wrapper .dataTables_filter input {
+    display: inline-block;
+    width: auto;
+}
+#employeeTable_wrapper .dataTables_filter input {
+    padding: .25rem .75rem;
+}
+#employeeTable_wrapper .dataTables_filter select {
+    width: auto;
+    min-width: 130px;
+}
+#employeeTable_wrapper .dataTables_info,
+#employeeTable_wrapper .dataTables_length,
+#employeeTable_wrapper .dataTables_filter,
+#employeeTable_wrapper .dataTables_paginate {
+    padding: .75rem 1.25rem;
+}
+#employeeTable thead th {
+    font-size: .75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    white-space: nowrap;
+}
+div.dataTables_wrapper div.dataTables_paginate ul.pagination { margin: 0; }
+.dt-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .75rem 1.25rem;
+    border-bottom: 1px solid rgba(67,89,113,.1);
+}

@@ -1,51 +1,124 @@
 @extends('layouts.app')
 @section('title', $employee->full_name)
 @section('content')
-<div class="row g-3">
+<div class="row g-4">
+
+    {{-- Profile card --}}
     <div class="col-md-4">
-        <div class="card shadow-sm border-0 text-center p-4">
-            @if($employee->photo_path)
-            <img src="{{ Storage::url($employee->photo_path) }}" class="rounded-circle mx-auto mb-3" style="width:100px;height:100px;object-fit:cover">
-            @else
-            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width:90px;height:90px;font-size:2rem">
-                {{ strtoupper(substr($employee->first_name,0,1).substr($employee->last_name,0,1)) }}
+        <div class="card shadow-sm border-0">
+            <div class="card-header py-3 d-flex align-items-center justify-content-between">
+                <h6 class="mb-0 fw-semibold">Employee Profile</h6>
+                @can('edit employees')
+                <a href="{{ route('employees.edit', $employee) }}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-pencil me-1"></i> Edit
+                </a>
+                @endcan
             </div>
-            @endif
-            <h5 class="mb-0">{{ $employee->full_name }}</h5>
-            <div class="text-muted small">{{ $employee->position }}</div>
-            <span class="badge {{ $employee->status === 'active' ? 'bg-success' : 'bg-secondary' }} mt-2">{{ ucfirst($employee->status) }}</span>
-            <hr>
-            <div class="text-start small">
-                <div class="mb-1"><i class="bi bi-building me-1 text-muted"></i> {{ $employee->branch->name ?? '—' }}</div>
-                <div class="mb-1"><i class="bi bi-briefcase me-1 text-muted"></i> {{ ucwords(str_replace('_',' ',$employee->employment_type)) }}</div>
-                <div class="mb-1"><i class="bi bi-calendar me-1 text-muted"></i> Hired {{ $employee->hire_date?->format('M d, Y') }}</div>
-                @if($employee->contact_no)<div class="mb-1"><i class="bi bi-telephone me-1 text-muted"></i> {{ $employee->contact_no }}</div>@endif
-                @if($employee->shift)<div class="mb-1"><i class="bi bi-clock me-1 text-muted"></i> {{ $employee->shift->name }}</div>@endif
+            <div class="card-body text-center">
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width:90px;height:90px;overflow:hidden;background:#8592a3">
+                    @if($employee->photo_path)
+                    <img src="{{ Storage::url($employee->photo_path) }}" style="width:100%;height:100%;object-fit:cover" alt="">
+                    @else
+                    <span class="text-white fw-bold" style="font-size:2rem">
+                        {{ strtoupper(substr($employee->first_name,0,1).substr($employee->last_name,0,1)) }}
+                    </span>
+                    @endif
+                </div>
+                <h5 class="mb-0 fw-semibold">{{ $employee->full_name }}</h5>
+                <div class="text-muted small mb-2">{{ $employee->position?->title ?? '—' }}</div>
+                <span class="badge {{ $employee->status === 'active' ? 'bg-label-success' : 'bg-label-secondary' }}">
+                    {{ ucfirst($employee->status) }}
+                </span>
             </div>
-            @can('edit employees')
-            <a href="{{ route('employees.edit', $employee) }}" class="btn btn-sm btn-outline-primary mt-3 w-100">Edit Profile</a>
-            @endcan
+            <div class="card-body border-top pt-3">
+                <ul class="list-unstyled mb-0 small">
+                    <li class="mb-2 d-flex align-items-center gap-2">
+                        <i class="bi bi-person-badge text-muted"></i>
+                        <span class="text-muted">Employee No</span>
+                        <code class="ms-auto text-primary fw-semibold">{{ $employee->employee_no }}</code>
+                    </li>
+                    <li class="mb-2 d-flex align-items-center gap-2">
+                        <i class="bi bi-building text-muted"></i>
+                        <span class="text-muted">Branch</span>
+                        <span class="ms-auto fw-semibold">{{ $employee->branch->name ?? 'N/A' }}</span>
+                    </li>
+                    <li class="mb-2 d-flex align-items-center gap-2">
+                        <i class="bi bi-briefcase text-muted"></i>
+                        <span class="text-muted">Type</span>
+                        <span class="ms-auto fw-semibold">{{ ucwords(str_replace('_', ' ', $employee->employment_type)) }}</span>
+                    </li>
+                    <li class="mb-2 d-flex align-items-center gap-2">
+                        <i class="bi bi-calendar text-muted"></i>
+                        <span class="text-muted">Hired</span>
+                        <span class="ms-auto fw-semibold">{{ $employee->hire_date?->format('M d, Y') ?? 'N/A' }}</span>
+                    </li>
+                    @if($employee->shift)
+                    <li class="mb-2 d-flex align-items-center gap-2">
+                        <i class="bi bi-clock text-muted"></i>
+                        <span class="text-muted">Shift</span>
+                        <span class="ms-auto fw-semibold">{{ $employee->shift->name }}</span>
+                    </li>
+                    @endif
+                    @if($employee->contact_no)
+                    <li class="mb-2 d-flex align-items-center gap-2">
+                        <i class="bi bi-telephone text-muted"></i>
+                        <span class="text-muted">Contact</span>
+                        <span class="ms-auto fw-semibold">{{ $employee->contact_no }}</span>
+                    </li>
+                    @endif
+                </ul>
+            </div>
         </div>
     </div>
-    <div class="col-md-8">
+
+    {{-- Attendance card --}}
+<div class="col-md-8">
         <div class="card shadow-sm border-0">
-            <div class="card-header bg-white border-0 pt-3">
-                <h6 class="mb-0 fw-semibold">Recent Attendance (last 14 days)</h6>
+            <div class="card-header d-flex align-items-center justify-content-between py-3">
+                <h6 class="mb-0 fw-semibold"><i class="bi bi-clock-history me-1"></i> Recent Attendance <span class="text-muted fw-normal small">(last 14 days)</span></h6>
+                <a href="{{ route('employees.index') }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Back
+                </a>
             </div>
-            <div class="card-body p-0">
-                <table class="table table-sm mb-0">
-                    <thead class="table-light"><tr><th>Date</th><th>Time In</th><th>Time Out</th><th>Hours</th><th>Status</th></tr></thead>
-                    <tbody>
-                        @forelse($employee->attendanceRecords->take(14) as $r)
+            <div class="card-datatable table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
                         <tr>
-                            <td>{{ $r->date->format('M d, Y') }}</td>
-                            <td>{{ $r->time_in ?? '—' }}</td>
-                            <td>{{ $r->time_out ?? '—' }}</td>
-                            <td>{{ $r->hours_worked ?? '—' }}</td>
-                            <td><span class="badge badge-{{ $r->status }}">{{ ucfirst(str_replace('_',' ',$r->status)) }}</span></td>
+                            <th style="font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Date</th>
+                            <th style="font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Time In</th>
+                            <th style="font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Time Out</th>
+                            <th style="font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Hours</th>
+                            <th style="font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($employee->attendanceRecords->sortByDesc('date')->take(14) as $r)
+                        <tr>
+                            <td class="fw-semibold">{{ $r->date->format('M d, Y') }}</td>
+                            <td>{{ $r->time_in  ? \Carbon\Carbon::parse($r->time_in)->format('h:i A')  : '<span class="text-muted">&mdash;</span>' }}</td>
+                            <td>{{ $r->time_out ? \Carbon\Carbon::parse($r->time_out)->format('h:i A') : '<span class="text-muted">&mdash;</span>' }}</td>
+                            <td>{{ $r->hours_worked ?? '<span class="text-muted">&mdash;</span>' }}</td>
+                            <td>
+                                @php
+                                    $badgeClass = match($r->status ?? '') {
+                                        'present'   => 'bg-label-success',
+                                        'absent'    => 'bg-label-danger',
+                                        'late'      => 'bg-label-warning',
+                                        'half_day'  => 'bg-label-info',
+                                        'on_leave'  => 'bg-label-secondary',
+                                        default     => 'bg-label-secondary',
+                                    };
+                                @endphp
+                                <span class="badge {{ $badgeClass }}">{{ ucfirst(str_replace('_', ' ', $r->status)) }}</span>
+                            </td>
                         </tr>
                         @empty
-                        <tr><td colspan="5" class="text-muted text-center py-3">No records found.</td></tr>
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="bi bi-calendar-x d-block mb-1" style="font-size:1.5rem"></i>
+                                No attendance records found.
+                            </td>
+                        </tr>
                         @endforelse
                     </tbody>
                 </table>

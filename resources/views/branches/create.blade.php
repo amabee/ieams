@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title','Add Branch')
 @section('content')
-<div class="card shadow-sm border-0" style="max-width:640px">
+<div class="card shadow-sm border-0">
     <div class="card-header bg-white border-0 pt-3">
         <h6 class="mb-0 fw-semibold">New Branch</h6>
     </div>

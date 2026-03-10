@@ -1,55 +1,76 @@
 @extends('layouts.app')
-@section('title','Branches')
+@section('title', 'Branches')
+
+@push('styles')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="{{ asset('css/branches.css') }}">
+@endpush
+
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h5 class="mb-0 fw-bold"><i class="bi bi-building me-1"></i> Branches</h5>
-    @can('create branches')
-    <a href="{{ route('branches.create') }}" class="btn btn-primary btn-sm">
-        <i class="bi bi-plus-lg me-1"></i> Add Branch
-    </a>
-    @endcan
-</div>
 <div class="card shadow-sm border-0">
-    <div class="card-body p-0">
-        <table class="table table-hover mb-0 align-middle">
-            <thead class="table-light">
+    <div class="card-header d-flex justify-content-between align-items-center py-3">
+        <h5 class="mb-0 fw-bold"><i class="bi bi-building me-1"></i> Branches</h5>
+        @can('create branches')
+        <a href="{{ route('branches.create') }}" class="btn btn-primary btn-md">
+            <i class="bi bi-plus-lg me-1"></i> Add Branch
+        </a>
+        @endcan
+    </div>
+    <div class="card-datatable table-responsive">
+        <table id="branchTable" class="table table-hover align-middle w-100">
+            <thead>
                 <tr>
-                    <th>Branch Name</th><th>Address</th><th>Contact</th><th>Manager</th><th>Status</th><th>Actions</th>
+                    <th>Branch Name</th>
+                    <th>Address</th>
+                    <th>Contact No.</th>
+                    <th>Email</th>
+                    <th>Employees</th>
+                    <th>Manager</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                @forelse($branches as $branch)
-                <tr>
-                    <td class="fw-semibold">{{ $branch->name }}</td>
-                    <td>{{ $branch->address ?? '—' }}</td>
-                    <td>{{ $branch->contact_no ?? '—' }}</td>
-                    <td>{{ $branch->manager->name ?? '—' }}</td>
-                    <td>
-                        @if($branch->is_active)
-                        <span class="badge bg-success">Active</span>
-                        @else
-                        <span class="badge bg-secondary">Inactive</span>
-                        @endif
-                    </td>
-                    <td>
-                        <a href="{{ route('branches.edit', $branch) }}" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                        @can('delete branches')
-                        <form action="{{ route('branches.destroy', $branch) }}" method="POST" class="d-inline"
-                              onsubmit="return confirm('Delete this branch?')">
-                            @csrf @method('DELETE')
-                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                        </form>
-                        @endcan
-                    </td>
-                </tr>
-                @empty
-                <tr><td colspan="6" class="text-center text-muted py-4">No branches found.</td></tr>
-                @endforelse
-            </tbody>
         </table>
     </div>
 </div>
-{{ $branches->links() }}
 @endsection
+
+@push('scripts')
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+<script>
+$(function () {
+    $('#branchTable').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: '{{ route('branches.data') }}',
+        columns: [
+            { data: 'name' },
+            { data: 'address' },
+            { data: 'contact_no' },
+            { data: 'email' },
+            { data: 'employees_count' },
+            { data: 'manager', orderable: false },
+            { data: 'status',  orderable: false },
+            { data: 'actions', orderable: false, searchable: false },
+        ],
+        pageLength: 10,
+        language: {
+            search: '',
+            searchPlaceholder: 'Search...',
+            lengthMenu: 'Show _MENU_ entries',
+            info: 'Showing _START_ to _END_ of _TOTAL_ branches',
+            paginate: {
+                previous: '<i class="bi bi-chevron-left"></i>',
+                next:     '<i class="bi bi-chevron-right"></i>',
+            }
+        },
+        dom: "<'dt-top-bar'lf>t<'d-flex align-items-center justify-content-between flex-wrap px-3 pb-2'ip>",
+        initComplete: function () {
+            $('#branchTable_wrapper .dataTables_length select').addClass('form-select form-select-sm');
+            $('#branchTable_wrapper .dataTables_filter input').addClass('form-control form-control-sm');
+        }
+    });
+});
+</script>
+@endpush

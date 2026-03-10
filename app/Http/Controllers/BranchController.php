@@ -10,8 +10,67 @@ class BranchController extends Controller
 {
     public function index()
     {
-        $branches = Branch::withCount('employees')->latest()->paginate(15);
-        return view('branches.index', compact('branches'));
+        return view('branches.index');
+    }
+
+    public function data(Request $request)
+    {
+        $query = Branch::withCount('employees')->with('manager');
+
+        // Global search
+        if ($search = $request->input('search.value')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('address', 'like', "%{$search}%")
+                  ->orWhere('contact_no', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $total = Branch::withCount('employees')->count();
+        $filtered = $query->count();
+
+        // Ordering
+        $columns = ['name', 'address', 'contact_no', 'email', 'employees_count', 'is_active'];
+        $orderCol = $columns[$request->input('order.0.column', 0)] ?? 'name';
+        $orderDir = $request->input('order.0.dir', 'asc') === 'desc' ? 'desc' : 'asc';
+        $query->orderBy($orderCol, $orderDir);
+
+        // Pagination
+        $start  = (int) $request->input('start', 0);
+        $length = (int) $request->input('length', 10);
+        $branches = $query->skip($start)->take($length)->get();
+
+        $data = $branches->map(function ($b) {
+            $statusBadge = $b->is_active
+                ? '<span class="badge bg-label-success">Active</span>'
+                : '<span class="badge bg-label-secondary">Inactive</span>';
+
+            $actions = '<a href="' . route('branches.edit', $b) . '" class="btn btn-sm btn-icon btn-outline-primary me-1"><i class="bi bi-pencil"></i></a>';
+            if (auth()->user()->can('delete branches')) {
+                $actions .= '<form action="' . route('branches.destroy', $b) . '" method="POST" class="d-inline" onsubmit="return confirm(\'Delete this branch?\')">'
+                    . csrf_field() . method_field('DELETE')
+                    . '<button class="btn btn-sm btn-icon btn-outline-danger"><i class="bi bi-trash"></i></button></form>';
+            }
+
+            return [
+                'name'            => e($b->name),
+                'address'         => e($b->address ?? '—'),
+                'contact_no'      => e($b->contact_no ?? '—'),
+                'email'           => e($b->email ?? '—'),
+                'employees_count' => $b->employees_count,
+                'manager'         => e($b->manager->name ?? '—'),
+                'status'          => $statusBadge,
+                'actions'         => $actions,
+            ];
+        });
+
+        return response()->json([
+            'draw'            => (int) $request->input('draw'),
+            'recordsTotal'    => $total,
+            'recordsFiltered' => $filtered,
+            'data'            => $data,
+        ]);
     }
 
     public function create()
