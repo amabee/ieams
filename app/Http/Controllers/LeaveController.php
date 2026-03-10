@@ -7,6 +7,9 @@ use App\Models\Branch;
 use App\Models\Employee;
 use App\Models\Leave;
 use App\Models\LeaveBalance;
+use App\Models\User;
+use App\Notifications\LeaveRequestedNotification;
+use App\Notifications\LeaveStatusChangedNotification;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
@@ -64,11 +67,23 @@ class LeaveController extends Controller
         $totalDays = Carbon::parse($validated['start_date'])
             ->diffInWeekdays(Carbon::parse($validated['end_date'])) + 1;
 
-        Leave::create(array_merge($validated, [
+        $leave = Leave::create(array_merge($validated, [
             'employee_id' => $employee->id,
             'total_days'  => $totalDays,
             'status'      => 'pending',
         ]));
+
+        // Notify users who can approve leaves
+        $leave->load('employee.branch');
+        $approvers = User::permission('approve leaves')
+            ->where('id', '!=', auth()->id())
+            ->get();
+        foreach ($approvers as $approver) {
+            if ($approver->hasRole('branch_manager') && $approver->branch_id !== $employee->branch_id) {
+                continue;
+            }
+            $approver->notify(new LeaveRequestedNotification($leave));
+        }
 
         return redirect()->route('leaves.index')->with('success', 'Leave request submitted.');
     }
@@ -114,6 +129,8 @@ class LeaveController extends Controller
     {
         $leave->update(['status' => 'approved', 'reviewed_by' => auth()->id()]);
 
+        $this->notifyEmployee($leave, 'approved');
+
         // Mark attendance records as on_leave for approved dates
         $period = CarbonPeriod::create($leave->start_date, $leave->end_date);
         foreach ($period as $date) {
@@ -142,6 +159,12 @@ class LeaveController extends Controller
         return back()->with('success', 'Leave approved.');
     }
 
+    private function notifyEmployee(Leave $leave, string $status, ?string $comment = null): void
+    {
+        $employeeUser = User::where('employee_id', $leave->employee_id)->first();
+        $employeeUser?->notify(new LeaveStatusChangedNotification($leave, $status, $comment));
+    }
+
     public function deny(Request $request, Leave $leave)
     {
         $leave->update([
@@ -149,6 +172,9 @@ class LeaveController extends Controller
             'reviewed_by'    => auth()->id(),
             'review_comment' => $request->comment,
         ]);
+
+        $this->notifyEmployee($leave, 'denied', $request->comment);
+
         return back()->with('success', 'Leave denied.');
     }
 }

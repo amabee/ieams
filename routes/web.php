@@ -83,6 +83,7 @@ Route::middleware(['auth'])->group(function () {
   Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
   Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
   Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
+  Route::get('/notifications/poll', [NotificationController::class, 'poll'])->name('notifications.poll');
 
   // Audit Logs
   Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');

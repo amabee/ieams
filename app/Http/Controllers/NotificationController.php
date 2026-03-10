@@ -23,4 +23,21 @@ class NotificationController extends Controller
         auth()->user()->unreadNotifications->markAsRead();
         return back()->with('success', 'All notifications marked as read.');
     }
+
+    public function poll()
+    {
+        $user  = auth()->user();
+        $unread = $user->unreadNotifications()->count();
+        $items = $user->unreadNotifications()->latest()->take(5)->get()->map(fn ($n) => [
+            'id'      => $n->id,
+            'title'   => $n->data['title'] ?? 'Notification',
+            'message' => $n->data['message'] ?? '',
+            'icon'    => $n->data['icon'] ?? 'bx-bell',
+            'color'   => $n->data['color'] ?? 'primary',
+            'url'     => $n->data['url'] ?? '#',
+            'time'    => $n->created_at->diffForHumans(),
+        ]);
+
+        return response()->json(['unread' => $unread, 'items' => $items]);
+    }
 }

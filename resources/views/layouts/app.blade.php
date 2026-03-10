@@ -1153,5 +1153,78 @@
     </script>
 
     @stack('scripts')
+
+    {{-- Notification polling (every 30s) --}}
+    @auth
+    <script>
+    (function pollNotifications() {
+        const POLL_URL  = '{{ route('notifications.poll') }}';
+        const INTERVAL  = 5000;
+        let lastCount   = {{ auth()->user()->unreadNotifications()->count() }};
+
+        function updateBadge(count) {
+            const badge = document.querySelector('.badge-notifications');
+            if (count > 0) {
+                if (!badge) {
+                    const bell = document.querySelector('.bx-bell').closest('a');
+                    const b = document.createElement('span');
+                    b.className = 'badge bg-danger rounded-pill badge-notifications';
+                    b.textContent = count > 9 ? '9+' : count;
+                    bell.appendChild(b);
+                } else {
+                    badge.textContent = count > 9 ? '9+' : count;
+                    badge.style.display = '';
+                }
+            } else if (badge) {
+                badge.style.display = 'none';
+            }
+        }
+
+        function updateDropdown(items) {
+            const list = document.querySelector('.dropdown-notifications-list .list-group');
+            if (!list) return;
+            list.innerHTML = items.length
+                ? items.map(n => `
+                    <li class="list-group-item list-group-item-action dropdown-notifications-item">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0 me-3">
+                                <div class="avatar">
+                                    <span class="avatar-initial rounded-circle bg-label-${n.color}"><i class="bx ${n.icon}"></i></span>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">${n.title}</h6>
+                                <p class="mb-0 small">${n.message}</p>
+                                <small class="text-muted">${n.time}</small>
+                            </div>
+                        </div>
+                    </li>`).join('')
+                : `<li class="list-group-item"><div class="text-center py-3"><span class="text-muted">No new notifications</span></div></li>`;
+
+            // Update "X New" badge in dropdown header
+            const headerBadge = document.querySelector('.dropdown-menu-header .badge-sm');
+            if (headerBadge) {
+                headerBadge.textContent = items.length > 0 ? items.length + ' New' : '';
+                headerBadge.style.display = items.length > 0 ? '' : 'none';
+            }
+        }
+
+        function poll() {
+            fetch(POLL_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.unread !== lastCount) {
+                        lastCount = data.unread;
+                        updateBadge(data.unread);
+                        updateDropdown(data.items);
+                    }
+                })
+                .catch(() => {}); // silently fail
+        }
+
+        setInterval(poll, INTERVAL);
+    })();
+    </script>
+    @endauth
 </body>
 </html>
