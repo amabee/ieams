@@ -48,9 +48,9 @@ class BranchController extends Controller
 
             $actions = '<a href="' . route('branches.edit', $b) . '" class="btn btn-sm btn-icon btn-outline-primary me-1"><i class="bi bi-pencil"></i></a>';
             if (auth()->user()->can('delete branches')) {
-                $actions .= '<form action="' . route('branches.destroy', $b) . '" method="POST" class="d-inline" onsubmit="return confirm(\'Delete this branch?\')">'
+                $actions .= '<form action="' . route('branches.destroy', $b) . '" method="POST" class="d-inline swal-delete-form">'
                     . csrf_field() . method_field('DELETE')
-                    . '<button class="btn btn-sm btn-icon btn-outline-danger"><i class="bi bi-trash"></i></button></form>';
+                    . '<button type="button" class="btn btn-sm btn-icon btn-outline-danger swal-delete-btn" data-name="' . e($b->name) . '"><i class="bi bi-trash"></i></button></form>';
             }
 
             return [
@@ -75,12 +75,14 @@ class BranchController extends Controller
 
     public function create()
     {
+        $this->authorize('create branches');
         $managers = User::role(['admin', 'branch_manager', 'hr'])->get();
         return view('branches.create', compact('managers'));
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create branches');
         $validated = $request->validate([
             'name'       => 'required|string|max:100|unique:branches',
             'address'    => 'nullable|string|max:255',
@@ -101,12 +103,14 @@ class BranchController extends Controller
 
     public function edit(Branch $branch)
     {
+        $this->authorize('edit branches');
         $managers = User::role(['admin', 'branch_manager', 'hr'])->get();
         return view('branches.edit', compact('branch', 'managers'));
     }
 
     public function update(Request $request, Branch $branch)
     {
+        $this->authorize('edit branches');
         $validated = $request->validate([
             'name'       => 'required|string|max:100|unique:branches,name,' . $branch->id,
             'address'    => 'nullable|string|max:255',
@@ -122,6 +126,7 @@ class BranchController extends Controller
 
     public function destroy(Branch $branch)
     {
+        $this->authorize('delete branches');
         if ($branch->employees()->exists()) {
             return back()->with('error', 'Cannot delete a branch with active employees.');
         }

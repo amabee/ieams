@@ -234,6 +234,17 @@
                             <div data-i18n="Manage">Manage</div>
                         </a>
                     </li>
+
+                    <li class="menu-item {{ request()->routeIs('attendance.corrections') ? 'active' : '' }}">
+                        <a href="{{ route('attendance.corrections') }}" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-revision"></i>
+                            <div data-i18n="Corrections">Corrections</div>
+                            @php $pendingCorr = \App\Models\AttendanceCorrection::where('status','pending')->count(); @endphp
+                            @if($pendingCorr)
+                            <div class="badge bg-warning text-dark rounded-pill ms-auto">{{ $pendingCorr }}</div>
+                            @endif
+                        </a>
+                    </li>
                     @endhasanyrole
 
                     <!-- Leaves -->

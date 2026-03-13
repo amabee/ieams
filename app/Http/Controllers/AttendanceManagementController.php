@@ -183,12 +183,13 @@ class AttendanceManagementController extends Controller
 
     public function corrections(Request $request)
     {
-        $corrections = AttendanceCorrection::with(['attendanceRecord.employee', 'corrector'])
-            ->where('status', 'pending')
-            ->latest()
-            ->paginate(20);
+        $base = AttendanceCorrection::with(['attendanceRecord.employee', 'corrector', 'approver'])->latest();
 
-        return view('attendance.corrections', compact('corrections'));
+        $pending  = (clone $base)->where('status', 'pending')->paginate(20, ['*'], 'pendingPage');
+        $approved = (clone $base)->where('status', 'approved')->paginate(20, ['*'], 'approvedPage');
+        $denied   = (clone $base)->where('status', 'denied')->paginate(20, ['*'], 'deniedPage');
+
+        return view('attendance.corrections', compact('pending', 'approved', 'denied'));
     }
 
     public function approve(AttendanceCorrection $correction)

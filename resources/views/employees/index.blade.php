@@ -100,6 +100,23 @@ $(function () {
             });
         }
     });
+
+    $(document).on('click', '.swal-delete-btn', function () {
+        var form = $(this).closest('.swal-delete-form');
+        var name = $(this).data('name') || 'this employee';
+        Swal.fire({
+            title: 'Delete employee?',
+            text: 'Are you sure you want to delete "' + name + '"? This cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, delete',
+        }).then(function (result) {
+            if (result.isConfirmed) { form.submit(); }
+        });
+    });
 });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 @endpush

@@ -32,7 +32,14 @@ class DashboardController extends Controller
                 COUNT(*) as total
             ")->first();
 
-        $pendingLeaves  = Leave::where('status', 'pending')->count();
+        $pendingLeaves = Leave::where('status', 'pending')
+            ->when($user->hasRole('branch_manager') && $branchId, fn ($q) =>
+                $q->whereHas('employee', fn ($e) => $e->where('branch_id', $branchId))
+            )
+            ->when($user->hasRole('employee'), fn ($q) =>
+                $q->where('employee_id', $user->employee?->id)
+            )
+            ->count();
         $totalEmployees = Employee::where('status', 'active')
             ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->count();

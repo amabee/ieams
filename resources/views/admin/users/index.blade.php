@@ -3,6 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <link rel="stylesheet" href="{{ asset('css/users.css') }}">
 @endpush
 
@@ -10,7 +11,7 @@
 <div class="card shadow-sm border-0">
     <div class="card-header d-flex justify-content-between align-items-center py-3">
         <h5 class="mb-0 fw-bold"><i class="bi bi-people me-1"></i> User Management</h5>
-        @can('create-user')
+        @can('create users')
         <a href="{{ route('admin.users.create') }}" class="btn btn-primary btn-md">
             <i class="bi bi-plus-lg me-1"></i> Add User
         </a>
@@ -100,6 +101,21 @@ $(function () {
             $role.add($status).on('change', function () { api.draw(); });
         }
     });
+
+    $(document).on('click', '.swal-delete-btn', function () {
+        var form = $(this).closest('form');
+        Swal.fire({
+            title: 'Delete this user?',
+            text: 'This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete',
+        }).then(function (result) {
+            if (result.isConfirmed) form.submit();
+        });
+    });
 });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 @endpush

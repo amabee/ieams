@@ -7,7 +7,6 @@ use App\Models\Shift;
 use App\Models\User;
 use App\Mail\AccountCreatedMail;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -23,6 +22,7 @@ class EmployeeController extends Controller
 
     public function create()
     {
+        $this->authorize('create employees');
         $branches  = Branch::where('is_active', true)->get();
         $shifts    = Shift::all();
         $roles     = Role::orderBy('name')->get();
@@ -32,6 +32,7 @@ class EmployeeController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create employees');
         $rules = [
             'employee_no'     => 'required|string|max:20|unique:employees',
             'first_name'      => 'required|string|max:80',
@@ -95,6 +96,7 @@ class EmployeeController extends Controller
 
     public function edit(Employee $employee)
     {
+        $this->authorize('edit employees');
         $branches  = Branch::where('is_active', true)->get();
         $shifts    = Shift::all();
         $roles     = Role::orderBy('name')->get();
@@ -105,6 +107,7 @@ class EmployeeController extends Controller
 
     public function update(Request $request, Employee $employee)
     {
+        $this->authorize('edit employees');
         $employee->loadMissing('user');
         $rules = [
             'employee_no'     => 'required|string|max:20|unique:employees,employee_no,' . $employee->id,
@@ -165,13 +168,20 @@ class EmployeeController extends Controller
 
     public function destroy(Employee $employee)
     {
+        $this->authorize('delete employees');
         $employee->delete();
         return redirect()->route("employees.index")->with("success","Employee removed.");
     }
 
     public function data(Request $request)
     {
+        $user  = auth()->user();
         $query = Employee::with(['branch', 'position']);
+
+        // Scope branch_manager to their own branch only
+        if ($user->hasRole('branch_manager') && $user->branch_id) {
+            $query->where('branch_id', $user->branch_id);
+        }
 
         // Custom filters
         if ($request->filled('branch_id')) {
@@ -192,7 +202,9 @@ class EmployeeController extends Controller
             });
         }
 
-        $total    = Employee::count();
+        $total    = $user->hasRole('branch_manager') && $user->branch_id
+            ? Employee::where('branch_id', $user->branch_id)->count()
+            : Employee::count();
         $filtered = $query->count();
 
         // Ordering
@@ -230,14 +242,14 @@ class EmployeeController extends Controller
                 : '<span class="badge bg-label-secondary">Inactive</span>';
 
             $actions = '<a href="'.route('employees.show', $emp).'" class="btn btn-sm btn-icon btn-outline-secondary" title="View"><i class="bi bi-eye"></i></a>';
-            if (Gate::allows('edit employees')) {
+            if (auth()->user()->can('edit employees')) {
                 $actions .= ' <a href="'.route('employees.edit', $emp).'" class="btn btn-sm btn-icon btn-outline-primary" title="Edit"><i class="bi bi-pencil"></i></a>';
             }
-            if (Gate::allows('delete employees')) {
-                $name = addslashes($emp->full_name);
-                $actions .= ' <form action="'.route('employees.destroy', $emp).'" method="POST" class="d-inline" onsubmit="return confirm(\'Delete '.$name.'?\')">'.
+            if (auth()->user()->can('delete employees')) {
+                $name = e($emp->full_name);
+                $actions .= ' <form action="'.route('employees.destroy', $emp).'" method="POST" class="d-inline swal-delete-form">'.
                     csrf_field().method_field('DELETE').
-                    '<button class="btn btn-sm btn-icon btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button></form>';
+                    '<button type="button" class="btn btn-sm btn-icon btn-outline-danger swal-delete-btn" title="Delete" data-name="'.$name.'"><i class="bi bi-trash"></i></button></form>';
             }
 
             return [

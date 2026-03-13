@@ -42,9 +42,9 @@ class ShiftController extends Controller
             $actions = '';
             if (auth()->user()->can('edit schedules')) {
                 $actions .= '<a href="' . route('shifts.edit', $s) . '" class="btn btn-sm btn-icon btn-outline-primary me-1"><i class="bi bi-pencil"></i></a>';
-                $actions .= '<form action="' . route('shifts.destroy', $s) . '" method="POST" class="d-inline" onsubmit="return confirm(\'Delete this shift?\')">'
+                $actions .= '<form action="' . route('shifts.destroy', $s) . '" method="POST" class="d-inline swal-delete-form">'
                     . csrf_field() . method_field('DELETE')
-                    . '<button class="btn btn-sm btn-icon btn-outline-danger"><i class="bi bi-trash"></i></button></form>';
+                    . '<button type="button" class="btn btn-sm btn-icon btn-outline-danger swal-delete-btn" data-name="' . e($s->name) . '"><i class="bi bi-trash"></i></button></form>';
             }
 
             return [
@@ -68,12 +68,14 @@ class ShiftController extends Controller
 
     public function create()
     {
+        $this->authorize('create schedules');
         $branches = Branch::where('is_active', true)->get();
         return view('shifts.create', compact('branches'));
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create schedules');
         $validated = $request->validate([
             'name'                   => 'required|string|max:100',
             'start_time'             => 'required',
@@ -93,12 +95,14 @@ class ShiftController extends Controller
 
     public function edit(Shift $shift)
     {
+        $this->authorize('edit schedules');
         $branches = Branch::where('is_active', true)->get();
         return view('shifts.edit', compact('shift', 'branches'));
     }
 
     public function update(Request $request, Shift $shift)
     {
+        $this->authorize('edit schedules');
         $validated = $request->validate([
             'name'                   => 'required|string|max:100',
             'start_time'             => 'required',
@@ -112,6 +116,7 @@ class ShiftController extends Controller
 
     public function destroy(Shift $shift)
     {
+        $this->authorize('edit schedules');
         $shift->delete();
         return redirect()->route('shifts.index')->with('success', 'Shift deleted.');
     }

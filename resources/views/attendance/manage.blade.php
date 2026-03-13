@@ -3,6 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 @endpush
 
 @section('content')
@@ -118,7 +119,7 @@
                     <th>Time Out</th>
                     <th>Hours</th>
                     <th>Status</th>
-                    @can('edit-attendance')<th class="text-center">Actions</th>@endcan
+                    @can('edit attendance')<th class="text-center">Actions</th>@endcan
                 </tr>
             </thead>
         </table>
@@ -173,17 +174,15 @@
                     <td class="text-center pe-4">
                         @can('approve-attendance-corrections')
                         <div class="d-flex justify-content-center gap-2">
-                            <form method="POST" action="{{ route('attendance.corrections.approve', $corr) }}">
+                            <form method="POST" action="{{ route('attendance.corrections.approve', $corr) }}" class="swal-approve-form">
                                 @csrf
-                                <button type="submit" class="btn btn-sm btn-success rounded-pill px-3"
-                                    onclick="return confirm('Approve this correction?')">
+                                <button type="button" class="btn btn-sm btn-success rounded-pill px-3 swal-approve-btn">
                                     <i class="bx bx-check me-1"></i> Approve
                                 </button>
                             </form>
-                            <form method="POST" action="{{ route('attendance.corrections.deny', $corr) }}">
+                            <form method="POST" action="{{ route('attendance.corrections.deny', $corr) }}" class="swal-deny-form">
                                 @csrf
-                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3"
-                                    onclick="return confirm('Deny this correction?')">
+                                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 swal-deny-btn">
                                     <i class="bx bx-x me-1"></i> Deny
                                 </button>
                             </form>
@@ -199,7 +198,7 @@
 @endif
 
 {{-- Single Edit Modal --}}
-@can('edit-attendance')
+@can('edit attendance')
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -260,9 +259,10 @@
 @push('scripts')
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(function () {
-    const canEdit = @json(auth()->user()->can('edit-attendance'));
+    const canEdit = @json(auth()->user()->can('edit attendance'));
 
     const columns = [
         { data: 'employee', orderable: false },
@@ -350,6 +350,29 @@ $(function () {
         $('#editStatus').val(btn.data('status'));
         $('#editNotes').val(btn.data('notes'));
         $('input[name="reason"]', '#editForm').val('');
+    });
+
+    $(document).on('click', '.swal-approve-btn', function () {
+        var form = $(this).closest('form');
+        Swal.fire({
+            title: 'Approve this correction?',
+            text: 'The attendance record will be updated immediately.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            confirmButtonText: 'Yes, approve',
+        }).then(function (result) { if (result.isConfirmed) form.submit(); });
+    });
+
+    $(document).on('click', '.swal-deny-btn', function () {
+        var form = $(this).closest('form');
+        Swal.fire({
+            title: 'Deny this correction?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Yes, deny',
+        }).then(function (result) { if (result.isConfirmed) form.submit(); });
     });
 });
 </script>

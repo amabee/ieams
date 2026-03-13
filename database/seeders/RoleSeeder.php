@@ -75,7 +75,7 @@ class RoleSeeder extends Seeder
         ]);
 
         Role::findByName('employee')->syncPermissions([
-            'view attendance',
+            'view attendance', 'record attendance',
             'create leaves', 'view leaves',
             'view schedules',
         ]);

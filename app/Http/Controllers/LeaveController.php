@@ -45,6 +45,7 @@ class LeaveController extends Controller
 
     public function create()
     {
+        $this->authorize('create leaves');
         $user         = auth()->user();
         $employee     = $user->employee;
         $leaveBalances = $employee
@@ -58,6 +59,7 @@ class LeaveController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create leaves');
         $user     = auth()->user();
         $employee = $user->employee;
 
@@ -98,23 +100,35 @@ class LeaveController extends Controller
 
     public function show(Leave $leave)
     {
+        $user = auth()->user();
+        if ($user->hasRole('employee') && $leave->employee_id !== $user->employee?->id) {
+            abort(403);
+        }
         $leave->load('employee.branch', 'reviewer');
         return view('leaves.show', compact('leave'));
     }
 
     public function edit(Leave $leave)
     {
+        $user = auth()->user();
+        if ($user->hasRole('employee') && $leave->employee_id !== $user->employee?->id) {
+            abort(403);
+        }
         return view('leaves.edit', compact('leave'));
     }
 
     public function update(Request $request, Leave $leave)
     {
+        $user = auth()->user();
+        if ($user->hasRole('employee') && $leave->employee_id !== $user->employee?->id) {
+            abort(403);
+        }
         if ($leave->status !== 'pending') {
             return back()->with('error', 'Cannot edit a processed leave request.');
         }
 
         $validated = $request->validate([
-            'leave_type' => 'required|in:sick,vacation,emergency,other',
+            'leave_type' => 'required|in:sick,vacation,emergency,maternity,paternity,unpaid,other',
             'start_date' => 'required|date',
             'end_date'   => 'required|date|after_or_equal:start_date',
             'reason'     => 'required|string|max:500',
@@ -126,6 +140,10 @@ class LeaveController extends Controller
 
     public function destroy(Leave $leave)
     {
+        $user = auth()->user();
+        if ($user->hasRole('employee') && $leave->employee_id !== $user->employee?->id) {
+            abort(403);
+        }
         if ($leave->status !== 'pending') {
             return back()->with('error', 'Cannot delete a processed leave request.');
         }
@@ -135,6 +153,7 @@ class LeaveController extends Controller
 
     public function approve(Leave $leave)
     {
+        $this->authorize('approve leaves');
         $leave->update(['status' => 'approved', 'reviewed_by' => auth()->id()]);
 
         $this->notifyEmployee($leave, 'approved');
@@ -175,6 +194,7 @@ class LeaveController extends Controller
 
     public function deny(Request $request, Leave $leave)
     {
+        $this->authorize('approve leaves');
         $leave->update([
             'status'         => 'denied',
             'reviewed_by'    => auth()->id(),
