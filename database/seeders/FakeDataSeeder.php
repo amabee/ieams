@@ -68,6 +68,10 @@ class FakeDataSeeder extends Seeder
         $this->command->info('🌱 Starting FakeDataSeeder...');
         $this->command->info('This may take several minutes — generating ~125 employees + ' . (now()->year - self::START_YEAR + 1) . ' years of attendance history.');
 
+        // Ensure roles & positions exist (needed when run standalone via --seeder=FakeDataSeeder)
+        $this->call(RoleSeeder::class);
+        $this->call(PositionSeeder::class);
+
         DB::disableQueryLog();
 
         // ── 1. Branches ───────────────────────────────────────────

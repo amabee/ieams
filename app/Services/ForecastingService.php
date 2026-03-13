@@ -25,6 +25,8 @@ class ForecastingService
 
     /**
      * Collect historical daily absenteeism counts for a branch.
+     * Returns ['data' => float[], 'trackedDays' => int]
+     * where trackedDays is the number of calendar days that had actual records.
      */
     public function collectHistoricalData(int $branchId, int $days = 180): array
     {
@@ -32,10 +34,14 @@ class ForecastingService
 
         $records = AttendanceRecord::where('branch_id', $branchId)
             ->where('date', '>=', $start)
-            ->selectRaw('date, COUNT(CASE WHEN status IN ("absent","on_leave") THEN 1 END) as absent_count, COUNT(*) as total')
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
+            ->selectRaw('DATE_FORMAT(date, "%Y-%m-%d") as date_str, COUNT(CASE WHEN status IN ("absent","on_leave") THEN 1 END) as absent_count, COUNT(*) as total')
+            ->groupBy('date_str')
+            ->orderBy('date_str')
+            ->get()
+            ->keyBy('date_str');
+
+        // trackedDays = days where any employee records exist (regardless of status)
+        $trackedDays = $records->where('total', '>', 0)->count();
 
         // Fill gaps with 0
         $data = [];
@@ -43,12 +49,12 @@ class ForecastingService
         $end = today()->subDay();
         while ($current <= $end) {
             $dateStr = $current->format('Y-m-d');
-            $row = $records->firstWhere('date', $dateStr);
+            $row = $records->get($dateStr);
             $data[] = $row ? (float) $row->absent_count : 0.0;
             $current->addDay();
         }
 
-        return $data;
+        return ['data' => $data, 'trackedDays' => $trackedDays];
     }
 
     /**
@@ -58,11 +64,15 @@ class ForecastingService
      * @param int     $horizon  Number of future steps to forecast
      * @return array{values: float[], usedFallback: bool}
      */
-    public function holtwinters(array $data, int $horizon): array
+    public function holtwinters(array $data, int $horizon, int $trackedDays = PHP_INT_MAX): array
     {
         $n = count($data);
-        if ($n < $this->period * 2) {
-            // Not enough data — fall back to simple moving average
+        // Need at least 2 full weekly periods of real tracked days to initialise
+        // seasonal components meaningfully. Using trackedDays (days with any
+        // attendance records) rather than absent counts, so branches with low
+        // absenteeism are not incorrectly penalised.
+        if ($trackedDays < $this->period * 2) {
+            // Not enough real data — fall back to simple moving average
             return ['values' => $this->movingAverage($data, $horizon), 'usedFallback' => true];
         }
 
@@ -127,15 +137,17 @@ class ForecastingService
      */
     public function runForBranch(Branch $branch, int $horizon = 30): void
     {
-        $data = $this->collectHistoricalData($branch->id, 180);
+        $result      = $this->collectHistoricalData($branch->id, 180);
+        $data        = $result['data'];
+        $trackedDays = $result['trackedDays'];
 
         if (empty($data)) {
             return;
         }
 
-        $result      = $this->holtwinters($data, $horizon);
-        $predictions = $result['values'];
-        $modelUsed   = $result['usedFallback'] ? 'moving_average' : 'holt_winters';
+        $hwResult    = $this->holtwinters($data, $horizon, $trackedDays);
+        $predictions = $hwResult['values'];
+        $modelUsed   = $hwResult['usedFallback'] ? 'moving_average' : 'holt_winters';
 
         // Get total employees for rate calculation
         $totalEmployees = $branch->employees()->where('status', 'active')->count();
@@ -153,7 +165,7 @@ class ForecastingService
                     'predicted_absent_count'      => (int) round($predictedCount),
                     'predicted_absenteeism_rate'  => $rate,
                     'model_used'                  => $modelUsed,
-                    'confidence_level'            => $result['usedFallback'] ? 50.0 : 75.0,
+                    'confidence_level'            => $hwResult['usedFallback'] ? 50.0 : 75.0,
                     'generated_at'                => $generatedAt,
                 ]
             );

@@ -1,4 +1,9 @@
-@php $uiV = session('ui_version', 'v2'); @endphp
+@php
+    // Global UI version — set by superadmin in System Settings, stored in DB.
+    // Synced to session so sub-views using session('ui_version') work correctly.
+    $uiV = \App\Models\SystemSetting::get('ui_version', 'v2');
+    session(['ui_version' => $uiV]);
+@endphp
 @if($uiV === 'v1')
 @php $v1Unread = auth()->user()->unreadNotifications->count(); @endphp
 <!DOCTYPE html>
@@ -199,8 +204,13 @@
         .btn-label-warning  { background: rgba(245,158,11,.18) !important; color: #b45309 !important; border: none; }
         .btn-label-danger   { background: rgba(239,68,68,.12)  !important; color: #dc2626 !important; border: none; }
         .btn-label-info     { background: rgba(59,130,246,.12) !important; color: #0369a1 !important; border: none; }
+        .bg-label-pink  { background: rgba(236,72,153,.12)  !important; color: #be185d !important; border-radius: 6px; }
+        .btn-label-secondary { background: rgba(100,116,139,.12) !important; color: #475569 !important; border: none; }
         .avatar      { display: inline-flex; width: 36px; height: 36px; border-radius: 8px; overflow: hidden; flex-shrink: 0; }
         .avatar-sm   { width: 28px; height: 28px; border-radius: 6px; }
+        .avatar-md   { width: 42px; height: 42px; border-radius: 8px; }
+        .avatar-lg   { width: 54px; height: 54px; border-radius: 10px; font-size: 1.1rem; }
+        .avatar-xl   { width: 70px; height: 70px; border-radius: 12px; font-size: 1.4rem; }
         .avatar-online::before { content: ''; position: absolute; width: 8px; height: 8px; background: #22c55e; border-radius: 50%; border: 2px solid #fff; bottom: 0; right: 0; }
         .avatar-initial { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-weight: 700; font-size: .82rem; }
         .badge-present  { background: rgba(34,197,94,.15);  color: #16a34a; }
@@ -234,6 +244,12 @@
             <i class="bi bi-building"></i><span>Branches</span>
         </a></li>
         @endhasanyrole
+
+        @can('view positions')
+        <li><a href="{{ route('positions.index') }}" class="{{ request()->routeIs('positions.*') ? 'active' : '' }}">
+            <i class="bi bi-briefcase"></i><span>Positions</span>
+        </a></li>
+        @endcan
 
         @hasanyrole(['hr','admin','superadmin'])
         <li><a href="{{ route('employees.index') }}" class="{{ request()->routeIs('employees.*') ? 'active' : '' }}">
@@ -308,6 +324,11 @@
             <i class="bi bi-gear"></i><span>Settings</span>
         </a></li>
         @endhasrole
+
+        <li><div class="v1-nav-label">Account</div></li>
+        <li><a href="{{ route('profile.edit') }}" class="{{ request()->routeIs('profile.*') ? 'active' : '' }}">
+            <i class="bi bi-person-circle"></i><span>My Profile</span>
+        </a></li>
 
     </ul>
 </aside>
@@ -443,7 +464,7 @@
         });
     }
     setTimeout(function () {
-        document.querySelectorAll('.alert').forEach(function (a) {
+        document.querySelectorAll('.alert:not([data-no-autodismiss])').forEach(function (a) {
             try { new bootstrap.Alert(a).close(); } catch (e) {}
         });
     }, 5000);
@@ -688,6 +709,16 @@
                         </a>
                     </li>
                     @endhasanyrole
+
+                    @can('view positions')
+                    <!-- Positions -->
+                    <li class="menu-item {{ request()->routeIs('positions.*') ? 'active' : '' }}">
+                        <a href="{{ route('positions.index') }}" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-briefcase"></i>
+                            <div data-i18n="Positions">Positions</div>
+                        </a>
+                    </li>
+                    @endcan
 
                     @hasanyrole(['hr', 'admin', 'superadmin'])
                     <!-- Employees -->
@@ -1660,7 +1691,7 @@
 
             // Auto-hide alerts after 5 seconds
             setTimeout(function() {
-                document.querySelectorAll('.alert').forEach(function(alert) {
+                document.querySelectorAll('.alert:not([data-no-autodismiss])').forEach(function(alert) {
                     new bootstrap.Alert(alert).close();
                 });
             }, 5000);

@@ -17,17 +17,19 @@ use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\PositionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn() => redirect()->route('login'));
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    // UI Version Switcher
+    // UI Version Switcher — superadmin only, stored globally in system_settings
     Route::post('/ui/version', function (\Illuminate\Http\Request $request) {
+        abort_unless(auth()->user()->hasRole('superadmin'), 403);
         $version = in_array($request->input('version'), ['v1', 'v2']) ? $request->input('version') : 'v2';
-        session(['ui_version' => $version]);
-        return back();
+        \App\Models\SystemSetting::set('ui_version', $version);
+        return back()->with('success', 'UI version updated. All users will see the new interface on their next page load.');
     })->name('ui.version');
 
     // Dashboard
@@ -78,7 +80,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('branches/data', [BranchController::class, 'data'])->name('branches.data');
         Route::resource('branches', BranchController::class);
     });
-
+    // ── Positions ──────────────────────────────────────────────────────
+    Route::middleware('can:view positions')->group(function () {
+        Route::get('positions/data', [PositionController::class, 'data'])->name('positions.data');
+        Route::resource('positions', PositionController::class);
+    });
     // ── Employees ──────────────────────────────────────────────────────────
     Route::middleware('can:view employees')->group(function () {
         Route::get('employees/data', [EmployeeController::class, 'data'])->name('employees.data');

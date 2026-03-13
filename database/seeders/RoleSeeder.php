@@ -23,6 +23,8 @@ class RoleSeeder extends Seeder
             'view branches', 'create branches', 'edit branches', 'delete branches',
             // Employees
             'view employees', 'create employees', 'edit employees', 'delete employees',
+            // Positions
+            'view positions', 'create positions', 'edit positions', 'delete positions',
             // Attendance
             'view attendance', 'record attendance', 'edit attendance', 'approve attendance correction',
             // Leaves
@@ -48,6 +50,7 @@ class RoleSeeder extends Seeder
             'view users', 'create users', 'edit users',
             'view branches', 'create branches', 'edit branches',
             'view employees', 'create employees', 'edit employees', 'delete employees',
+            'view positions', 'create positions', 'edit positions', 'delete positions',
             'view attendance', 'record attendance', 'edit attendance', 'approve attendance correction',
             'view leaves', 'create leaves', 'approve leaves',
             'view schedules', 'create schedules', 'edit schedules',
@@ -58,6 +61,7 @@ class RoleSeeder extends Seeder
 
         Role::findByName('hr')->syncPermissions([
             'view employees', 'create employees', 'edit employees',
+            'view positions', 'create positions', 'edit positions',
             'view attendance', 'record attendance', 'edit attendance', 'approve attendance correction',
             'view leaves', 'approve leaves',
             'view schedules', 'create schedules', 'edit schedules',

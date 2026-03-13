@@ -13,8 +13,8 @@
                 <h6 class="mb-0 fw-semibold text-white"><i class="bi bi-display me-2"></i>Appearance &amp; UI</h6>
             </div>
             <div class="card-body">
-                <p class="text-muted mb-3" style="font-size:.875rem">Choose which interface version to use. Changes take effect immediately and are saved to your session.</p>
-                @php $currentVer = session('ui_version', 'v2'); @endphp
+                <p class="text-muted mb-3" style="font-size:.875rem">Choose which interface version all users see. Changes take effect globally on the next page load for each user.</p>
+                @php $currentVer = \App\Models\SystemSetting::get('ui_version', 'v2'); @endphp
                 <div class="row g-3">
                     <div class="col-sm-6">
                         <div class="border rounded-3 p-3 h-100 d-flex flex-column {{ $currentVer === 'v1' ? 'border-primary' : 'border-2' }}" style="{{ $currentVer === 'v1' ? 'border-color:#4f8ef7 !important;background:rgba(79,142,247,.04)' : '' }}">

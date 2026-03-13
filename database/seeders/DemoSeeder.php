@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Branch;
+use App\Models\Position;
 use App\Models\Shift;
 use App\Models\Employee;
 use App\Models\User;
@@ -80,10 +81,13 @@ class DemoSeeder extends Seeder
         $hr->assignRole('hr');
 
         // Sample employees
+        $groomerPos = \App\Models\Position::where('title', 'like', '%Groo%')->first()?->id;
+        $vetPos     = \App\Models\Position::where('title', 'like', '%Vet%')->first()?->id;
+
         $emp1 = Employee::firstOrCreate(['employee_no' => 'EMP-001'], [
             'first_name'      => 'Maria',
             'last_name'       => 'Santos',
-            'position'        => 'Pet Groomer',
+            'position_id'     => $groomerPos,
             'employment_type' => 'full_time',
             'branch_id'       => $branch1->id,
             'shift_id'        => $morningShift->id,
@@ -102,7 +106,7 @@ class DemoSeeder extends Seeder
         $emp2 = Employee::firstOrCreate(['employee_no' => 'EMP-002'], [
             'first_name'      => 'Juan',
             'last_name'       => 'Dela Cruz',
-            'position'        => 'Veterinary Assistant',
+            'position_id'     => $vetPos,
             'employment_type' => 'full_time',
             'branch_id'       => $branch2->id,
             'shift_id'        => $afternoonShift->id,

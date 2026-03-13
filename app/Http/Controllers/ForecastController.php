@@ -45,22 +45,27 @@ class ForecastController extends Controller
         $to   = today()->addDays($horizon)->format('Y-m-d');
 
         if ($branchId) {
-            $forecasts = $forecasting->getForecast($branchId, $from, $to);
+            $forecasts    = $forecasting->getForecast($branchId, $from, $to);
+            $usedFallback = $forecasts->contains('model_used', 'moving_average');
         } else {
             // Aggregate across all branches per date
             $forecasts = Forecast::whereBetween('forecast_date', [$from, $to])
                 ->select('forecast_date')
                 ->selectRaw('SUM(predicted_absent_count) as predicted_absent_count')
                 ->selectRaw('AVG(predicted_absenteeism_rate) as predicted_absenteeism_rate')
-                ->selectRaw('MAX(model_used) as model_used')  // MAX picks moving_average if any branch uses fallback
+                ->selectRaw('SUM(CASE WHEN model_used = "moving_average" THEN 1 ELSE 0 END) as fallback_count')
+                ->selectRaw('COUNT(*) as row_count')
                 ->selectRaw('AVG(confidence_level) as confidence_level')
                 ->selectRaw('MAX(generated_at) as generated_at')
                 ->groupBy('forecast_date')
                 ->orderBy('forecast_date')
                 ->get();
-        }
 
-        $usedFallback = $forecasts->contains('model_used', 'moving_average');
+            // Only trigger the fallback warning if the MAJORITY of branch-days used moving_average
+            $totalRows     = $forecasts->sum('row_count');
+            $totalFallback = $forecasts->sum('fallback_count');
+            $usedFallback  = $totalRows > 0 && ($totalFallback / $totalRows) > 0.5;
+        }
         $confidence   = $forecasts->avg('confidence_level') ?? 75;
         // CI half-width: ~15% for Holt-Winters (75% CI), ~25% for moving average (50% CI)
         $ciWidth = $usedFallback ? 0.25 : 0.15;
@@ -126,7 +131,7 @@ class ForecastController extends Controller
 
     public function run(Request $request, ForecastingService $forecasting)
     {
-        $branchId = $request->branch_id;
+        $branchId = $request->input('branch_id');
 
         $branches = $branchId
             ? Branch::where('id', $branchId)->where('is_active', true)->get()
@@ -136,7 +141,12 @@ class ForecastController extends Controller
             $forecasting->runForBranch($branch, 30);
         }
 
-        $label = $branchId ? $branches->first()?->name : 'all branches';
+        $label = $branchId ? ($branches->first()?->name ?? 'selected branch') : 'all branches';
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => "Forecast generated for {$label}."]);
+        }
+
         return back()->with('success', "Forecast generated for {$label}.");
     }
 

@@ -16,14 +16,9 @@
             <option value="30" selected>30-Day View</option>
         </select>
         @can('run forecast')
-        <form method="POST" action="{{ route('forecasting.run') }}" class="d-inline" id="runForecastForm">
-            @csrf
-            <input type="hidden" name="branch_id" id="runBranchId" value="{{ $branchId }}">
-            <button type="submit" class="btn btn-sm btn-primary"
-                onclick="return confirm('Generate forecast for the selected branch?')">
-                <i class="bi bi-lightning-charge me-1"></i> Run Forecast
-            </button>
-        </form>
+        <button type="button" class="btn btn-sm btn-primary" id="runForecastBtn" onclick="runForecast()">
+            <i class="bi bi-lightning-charge me-1"></i> Run Forecast
+        </button>
         @endcan
     </div>
 </div>
@@ -35,9 +30,9 @@
 </div>
 @endif
 
-<div class="alert alert-info d-flex gap-2 align-items-start" id="fallbackAlert" style="display:none!important">
+<div class="alert alert-info gap-2 align-items-start d-none" id="fallbackAlert" data-no-autodismiss>
     <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1"></i>
-    <div><strong>Limited Data Mode:</strong> Not enough historical records for full Holt-Winters modelling — a moving average fallback was used. Accuracy will improve as more attendance data accumulates.</div>
+    <div><strong>Limited Data Mode:</strong> Not enough historical records for full Holt-Winters modelling — a moving average fallback was used. At least <strong>14 days</strong> of actual attendance records per branch are needed. Accuracy will improve as more data accumulates.</div>
 </div>
 
 {{-- Empty state (shown when no forecast data exists) --}}
@@ -48,7 +43,7 @@
             <h5 class="mt-3 mb-1">No Forecast Available</h5>
             <p class="text-muted mb-3">No forecast has been generated for this branch yet. Click <strong>Run Forecast</strong> to generate one.</p>
             @can('run forecast')
-            <button type="button" class="btn btn-primary" onclick="document.getElementById('runForecastForm').submit()">
+            <button type="button" class="btn btn-primary" onclick="runForecast()">
                 <i class="bi bi-lightning-charge me-1"></i> Generate Now
             </button>
             @endcan
@@ -162,10 +157,6 @@ function loadForecast() {
     const branchId = document.getElementById('branchFilter').value;
     const horizon  = document.getElementById('horizonFilter').value;
 
-    // Keep the run-forecast hidden input in sync (only exists for users with run-forecast permission)
-    const runInput = document.getElementById('runBranchId');
-    if (runInput) runInput.value = branchId;
-
     fetch(`{{ route('forecasting.data') }}?branch_id=${branchId}&horizon=${horizon}`)
         .then(r => r.json())
         .then(data => {
@@ -179,7 +170,10 @@ function loadForecast() {
 
             // Fallback warning
             const fallbackAlert = document.getElementById('fallbackAlert');
-            fallbackAlert.style.display = data.usedFallback ? 'flex' : 'none';
+            if (fallbackAlert) {
+                fallbackAlert.classList.toggle('d-none', !data.usedFallback);
+                fallbackAlert.classList.toggle('d-flex', data.usedFallback);
+            }
 
             // Model badge
             const badge = document.getElementById('modelBadge');
@@ -380,6 +374,56 @@ function interpretForecast() {
 document.getElementById('branchFilter').addEventListener('change', loadForecast);
 document.getElementById('horizonFilter').addEventListener('change', loadForecast);
 loadForecast();
+
+function runForecast() {
+    const branchId  = document.getElementById('branchFilter').value;
+    const branchName = document.getElementById('branchFilter').selectedOptions[0].text;
+    const btn = document.getElementById('runForecastBtn');
+
+    if (!confirm('Generate forecast for ' + branchName + '?')) return;
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Generating...';
+    }
+
+    fetch('{{ route('forecasting.run') }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({ branch_id: branchId || null }),
+    })
+    .then(r => {
+        if (!r.ok) throw new Error('Server error');
+        return r.json();
+    })
+    .then(res => {
+        // Show inline success banner
+        const existing = document.getElementById('ajaxSuccessAlert');
+        if (existing) existing.remove();
+        const div = document.createElement('div');
+        div.id = 'ajaxSuccessAlert';
+        div.className = 'alert alert-success alert-dismissible fade show mb-3';
+        div.innerHTML = '<i class="bi bi-check-circle me-2"></i>' + res.message
+            + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+        document.getElementById('fallbackAlert').after(div);
+        setTimeout(() => div.remove(), 6000);
+        // Reload chart data without a page reload
+        loadForecast();
+    })
+    .catch(() => {
+        alert('Failed to generate forecast. Please try again.');
+    })
+    .finally(() => {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-lightning-charge me-1"></i> Run Forecast';
+        }
+    });
+}
 </script>
 @endpush
 
