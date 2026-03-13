@@ -53,6 +53,17 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
 
+        $recentLeaves = Leave::with('employee')
+            ->when($user->hasRole('employee'),
+                fn ($q) => $q->where('employee_id', $user->employee?->id),
+                fn ($q) => $q->when($branchId, fn ($q2) =>
+                    $q2->whereHas('employee', fn ($e) => $e->where('branch_id', $branchId))
+                )
+            )
+            ->latest()
+            ->limit(5)
+            ->get();
+
         $weeklyTrend = collect();
         for ($i = 6; $i >= 0; $i--) {
             $date = $today->copy()->subDays($i);
@@ -70,7 +81,7 @@ class DashboardController extends Controller
 
         return view('dashboard.index', compact(
             'todayRecords', 'pendingLeaves', 'totalEmployees',
-            'branches', 'recentAttendance', 'weeklyTrend', 'branchId'
+            'branches', 'recentAttendance', 'weeklyTrend', 'branchId', 'recentLeaves'
         ));
     }
 }

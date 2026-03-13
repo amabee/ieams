@@ -16,22 +16,23 @@ use App\Models\User;
  * Generates realistic fake data:
  *  - 5 branches
  *  - 3 shifts
- *  - ~120 employees spread across branches
- *  - 365 days of attendance records per employee (~43,800 rows)
- *  - Leave records (approved, pending, denied)
- *  - Leave balances
+ *  - ~125 employees spread across branches
+ *  - Attendance records from Jan 1, START_YEAR to today (shift-aware random times)
+ *  - Holiday-window periods applied per covered year
+ *  - Leave records spread across all covered years (approved, pending, denied)
+ *  - Leave balances per year
  *
  * Run with: php artisan db:seed --class=FakeDataSeeder
  */
 class FakeDataSeeder extends Seeder
 {
     // ─── Configuration ───────────────────────────────────────────
-    const EMPLOYEES_PER_BRANCH = 25; // 5 branches × 25 = 125 employees
-    const DAYS_BACK            = 365; // 1 year of attendance history
-    const ABSENT_RATE          = 0.06;  // 6% chance of absent on any workday
-    const LATE_RATE            = 0.12;  // 12% chance of late
-    const HALF_DAY_RATE        = 0.03;  // 3% chance of half-day
-    const LEAVE_PER_EMPLOYEE   = 4;    // avg leave requests per employee
+    const EMPLOYEES_PER_BRANCH = 25;   // 5 branches × 25 = 125 employees
+    const START_YEAR           = 2023; // attendance + leave history from Jan 1 of this year
+    const ABSENT_RATE          = 0.06; // 6% chance of absent on any workday
+    const LATE_RATE            = 0.12; // 12% chance of late
+    const HALF_DAY_RATE        = 0.03; // 3% chance of half-day
+    const LEAVE_PER_EMPLOYEE   = 8;   // avg leave requests per employee (across all years)
 
     private array $firstNames = [
         'Maria','Jose','Juan','Ana','Miguel','Rosa','Carlo','Liza','Mark','Grace',
@@ -65,7 +66,7 @@ class FakeDataSeeder extends Seeder
     public function run(): void
     {
         $this->command->info('🌱 Starting FakeDataSeeder...');
-        $this->command->info('This may take a minute — generating ~125 employees + 1 year of attendance.');
+        $this->command->info('This may take several minutes — generating ~125 employees + ' . (now()->year - self::START_YEAR + 1) . ' years of attendance history.');
 
         DB::disableQueryLog();
 
@@ -165,7 +166,7 @@ class FakeDataSeeder extends Seeder
                 }
 
                 $shift    = $shifts[array_rand($shifts)];
-                $hireDate = Carbon::now()->subDays(rand(30, self::DAYS_BACK + 200));
+                $hireDate = Carbon::now()->subDays(rand(30, 1500)); // up to ~4 years back
                 $gender   = $genders[array_rand($genders)];
                 $salary   = rand(15000, 60000);
 
@@ -214,15 +215,22 @@ class FakeDataSeeder extends Seeder
 
     private function seedAttendance(array $employees, array $branches): void
     {
-        $branchMap = collect($branches)->keyBy('id');
+        $shiftMap  = Shift::all()->keyBy('id');
         $today     = today();
-        $startDate = today()->subDays(self::DAYS_BACK - 1);
+        $startDate = Carbon::create(self::START_YEAR, 1, 1);
 
-        // Holiday-like periods: higher absences around these windows
-        $holidayPeriods = [
-            [$today->copy()->subYear()->month(12)->startOfMonth()->day(20), $today->copy()->subYear()->month(12)->endOfMonth()],
-            [$today->copy()->month(4)->startOfMonth()->day(1), $today->copy()->month(4)->startOfMonth()->day(7)],
-        ];
+        // Build holiday high-absence windows for every covered year
+        $holidayPeriods = [];
+        for ($yr = self::START_YEAR; $yr <= $today->year; $yr++) {
+            // Christmas / New Year (Dec 18–Dec 31)
+            $holidayPeriods[] = [Carbon::create($yr, 12, 18), Carbon::create($yr, 12, 31)];
+            // Holy Week / Easter (approx. late March – early April)
+            $holidayPeriods[] = [Carbon::create($yr,  3, 28), Carbon::create($yr,  4,  8)];
+            // Independence Day week (Jun 10–14)
+            $holidayPeriods[] = [Carbon::create($yr,  6, 10), Carbon::create($yr,  6, 14)];
+            // All Saints / All Souls – Undas (Oct 30 – Nov 3)
+            $holidayPeriods[] = [Carbon::create($yr, 10, 30), Carbon::create($yr, 11,  3)];
+        }
 
         $batchSize = 500;
         $batch     = [];
@@ -231,67 +239,97 @@ class FakeDataSeeder extends Seeder
         $bar->start();
 
         foreach ($employees as $emp) {
-            $empStart = max($startDate, Carbon::parse($emp->hire_date));
+            $hireDate = Carbon::parse($emp->hire_date);
+            $empStart = $hireDate->gt($startDate) ? $hireDate->copy() : $startDate->copy();
+
+            // Load shift for this employee — used for realistic time-in/out offsets
+            $shift       = $shiftMap[$emp->shift_id] ?? null;
+            [$shStartH, $shStartM] = $shift
+                ? array_map('intval', explode(':', $shift->start_time))
+                : [8, 0];
+            [$shEndH, $shEndM] = $shift
+                ? array_map('intval', explode(':', $shift->end_time))
+                : [17, 0];
+            $lateThresh = $shift?->late_threshold_minutes ?? 15;
+            $shStartMin = $shStartH * 60 + $shStartM;
+            $shEndMin   = $shEndH   * 60 + $shEndM;
 
             $current = $empStart->copy();
             while ($current->lt($today)) {
                 $dow = $current->dayOfWeek; // 0=Sun, 6=Sat
 
-                // Skip weekends (Mon–Fri only: 1–5)
                 if ($dow === 0 || $dow === 6) {
                     $current->addDay();
                     continue;
                 }
 
-                // Check if near a holiday period → higher absent rate
+                // Near-holiday detection
                 $nearHoliday = false;
                 foreach ($holidayPeriods as [$hStart, $hEnd]) {
-                    if ($current->between($hStart, $hEnd)) {
-                        $nearHoliday = true;
-                        break;
-                    }
+                    if ($current->between($hStart, $hEnd)) { $nearHoliday = true; break; }
                 }
 
-                $absentRate  = $nearHoliday ? self::ABSENT_RATE * 3 : self::ABSENT_RATE;
-                $lateRate    = self::LATE_RATE;
-                $halfDayRate = self::HALF_DAY_RATE;
+                // Day-of-week modifiers
+                $isFriday    = ($dow === 5);
+                $isMonday    = ($dow === 1);
+                $absentRate  = $nearHoliday ? self::ABSENT_RATE * 2.5 : self::ABSENT_RATE;
+                $lateRate    = $isMonday    ? self::LATE_RATE    * 1.4 : self::LATE_RATE;
+                $halfDayRate = $isFriday    ? self::HALF_DAY_RATE * 1.5 : self::HALF_DAY_RATE;
 
                 $rand = mt_rand(0, 9999) / 10000;
 
                 if ($rand < $absentRate) {
+                    // ── Absent ──────────────────────────────────────────
                     $status    = 'absent';
                     $timeIn    = null;
                     $timeOut   = null;
                     $hoursWork = null;
+
                 } elseif ($rand < $absentRate + $halfDayRate) {
-                    $status    = 'half_day';
-                    $timeIn    = sprintf('%02d:%02d:00', rand(8, 9), rand(0, 59));
-                    $timeOut   = sprintf('%02d:%02d:00', rand(12, 14), rand(0, 59));
-                    $hoursWork = rand(3, 5) + rand(0, 9) / 10;
+                    // ── Half-day ─────────────────────────────────────────
+                    $status     = 'half_day';
+                    $arrivalMin = $shStartMin + rand(-10, 10);
+                    $departMin  = $arrivalMin + rand(240, 310); // 4–5 hrs
+                    $timeIn     = $this->minsToTime($arrivalMin);
+                    $timeOut    = $this->minsToTime($departMin);
+                    $hoursWork  = round(($departMin - $arrivalMin) / 60, 1);
+
                 } elseif ($rand < $absentRate + $halfDayRate + $lateRate) {
-                    $status    = 'late';
-                    $minutesLate = rand(16, 90);
-                    $timeIn    = sprintf('%02d:%02d:00', 8 + intdiv($minutesLate, 60), $minutesLate % 60);
-                    $timeOut   = sprintf('%02d:%02d:00', rand(17, 18), rand(0, 59));
-                    $hoursWork = rand(6, 8) + rand(0, 9) / 10;
+                    // ── Late ─────────────────────────────────────────────
+                    $status     = 'late';
+                    $minsLate   = rand($lateThresh + 1, 100);
+                    $arrivalMin = $shStartMin + $minsLate;
+                    // Sometimes stays later to (partially) compensate
+                    $departMin  = $shEndMin + rand(-10, 45);
+                    $timeIn     = $this->minsToTime($arrivalMin);
+                    $timeOut    = $this->minsToTime($departMin);
+                    $hoursWork  = round(($departMin - $arrivalMin) / 60, 1);
+
                 } else {
-                    $status    = 'present';
-                    $timeIn    = sprintf('%02d:%02d:00', 7 + rand(0, 1), rand(55, 59));
-                    $timeOut   = sprintf('%02d:%02d:00', rand(17, 18), rand(0, 59));
-                    $hoursWork = 8 + rand(0, 5) * 0.5;
+                    // ── Present ──────────────────────────────────────────
+                    $status     = 'present';
+                    // Arrive 1–15 min early (negative) or up to (threshold-1) min late (on-time)
+                    $offset     = rand(0, 1) ? -rand(1, 15) : rand(0, $lateThresh - 1);
+                    $arrivalMin = $shStartMin + $offset;
+                    // Fridays tend to leave a little earlier; other days may have overtime
+                    $overtime   = $isFriday ? rand(-20, 10) : rand(0, 60);
+                    $departMin  = $shEndMin + $overtime;
+                    $timeIn     = $this->minsToTime($arrivalMin);
+                    $timeOut    = $this->minsToTime($departMin);
+                    $hoursWork  = round(($departMin - $arrivalMin) / 60, 1);
                 }
 
                 $batch[] = [
-                    'employee_id'    => $emp->id,
-                    'branch_id'      => $emp->branch_id,
-                    'date'           => $current->format('Y-m-d'),
-                    'time_in'        => $timeIn,
-                    'time_out'       => $timeOut,
-                    'hours_worked'   => $hoursWork,
-                    'status'         => $status,
-                    'is_manual_entry'=> 0,
-                    'created_at'     => $current->format('Y-m-d') . ' 23:59:00',
-                    'updated_at'     => $current->format('Y-m-d') . ' 23:59:00',
+                    'employee_id'     => $emp->id,
+                    'branch_id'       => $emp->branch_id,
+                    'date'            => $current->format('Y-m-d'),
+                    'time_in'         => $timeIn,
+                    'time_out'        => $timeOut,
+                    'hours_worked'    => $hoursWork,
+                    'status'          => $status,
+                    'is_manual_entry' => 0,
+                    'created_at'      => $current->format('Y-m-d') . ' 23:59:00',
+                    'updated_at'      => $current->format('Y-m-d') . ' 23:59:00',
                 ];
 
                 if (count($batch) >= $batchSize) {
@@ -305,13 +343,19 @@ class FakeDataSeeder extends Seeder
             $bar->advance();
         }
 
-        // Flush remaining
         if (!empty($batch)) {
             DB::table('attendance_records')->insertOrIgnore($batch);
         }
 
         $bar->finish();
         $this->command->newLine();
+    }
+
+    /** Convert total minutes-from-midnight to HH:MM:00, clamped to 00:00–23:59 */
+    private function minsToTime(int $totalMins): string
+    {
+        $totalMins = max(0, min($totalMins, 1439));
+        return sprintf('%02d:%02d:00', intdiv($totalMins, 60), $totalMins % 60);
     }
 
     private function seedLeaves(array $employees): void
@@ -326,34 +370,25 @@ class FakeDataSeeder extends Seeder
             'other'     => ['Personal reasons', 'School event', 'Government errand', 'Community event', 'Other personal matter'],
         ];
 
-        $year       = now()->year;
-        $prevYear   = $year - 1;
-        $leaveBatch = [];
-        $balBatch   = [];
+        $leaveBatch  = [];
+        $balBatch    = [];
+        $allYears    = range(self::START_YEAR, now()->year);
+        $currentYear = now()->year;
 
-        // Leave balances first
+        // Leave balances: one row per employee × leave type × year
         foreach ($employees as $emp) {
             foreach ($leaveTypes as $lt) {
-                // Previous year — fully consumed
-                $balBatch[] = [
-                    'employee_id' => $emp->id,
-                    'leave_type'  => $lt,
-                    'year'        => $prevYear,
-                    'total_days'  => 15,
-                    'used_days'   => rand(5, 15),
-                    'created_at'  => now(),
-                    'updated_at'  => now(),
-                ];
-                // Current year — partially used
-                $balBatch[] = [
-                    'employee_id' => $emp->id,
-                    'leave_type'  => $lt,
-                    'year'        => $year,
-                    'total_days'  => 15,
-                    'used_days'   => rand(0, 8),
-                    'created_at'  => now(),
-                    'updated_at'  => now(),
-                ];
+                foreach ($allYears as $yr) {
+                    $balBatch[] = [
+                        'employee_id' => $emp->id,
+                        'leave_type'  => $lt,
+                        'year'        => $yr,
+                        'total_days'  => 15,
+                        'used_days'   => $yr < $currentYear ? rand(5, 15) : rand(0, 8),
+                        'created_at'  => now(),
+                        'updated_at'  => now(),
+                    ];
+                }
             }
         }
 
@@ -364,12 +399,13 @@ class FakeDataSeeder extends Seeder
 
         // Leave requests
         foreach ($employees as $emp) {
-            $count = rand(2, self::LEAVE_PER_EMPLOYEE + 2);
+            $count = rand(self::LEAVE_PER_EMPLOYEE, self::LEAVE_PER_EMPLOYEE * 2);
             for ($i = 0; $i < $count; $i++) {
                 $type = $this->weighted($leaveTypes, $leaveWeights);
 
-                // Random date in last 12 months
-                $startDays = rand(0, self::DAYS_BACK - 1);
+                // Random date across full history (START_YEAR → today)
+                $daysBack  = (int) Carbon::create(self::START_YEAR, 1, 1)->diffInDays(today());
+                $startDays = rand(0, $daysBack - 1);
                 $start     = today()->subDays($startDays);
 
                 // Skip if weekend

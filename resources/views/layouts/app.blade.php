@@ -1,3 +1,492 @@
+@php $uiV = session('ui_version', 'v2'); @endphp
+@if($uiV === 'v1')
+@php $v1Unread = auth()->user()->unreadNotifications->count(); @endphp
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title', 'Dashboard') — IEAMS Classic</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/favicon/favicon.ico') }}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    @stack('styles')
+    <style>
+        :root {
+            --v1-sidebar-bg: #1e293b;
+            --v1-accent:     #4f8ef7;
+            --v1-accent-dk:  #3b78e7;
+            --v1-sidebar-w:  248px;
+            --v1-topbar-h:   58px;
+            --v1-body-bg:    #f1f5f9;
+            --v1-tr:         all .18s cubic-bezier(.4,0,.2,1);
+        }
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { height: 100%; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--v1-body-bg); color: #1e293b; font-size: .9rem; }
+
+        /* ── SIDEBAR ── */
+        .v1-sidebar {
+            position: fixed; top: 0; left: 0; bottom: 0;
+            width: var(--v1-sidebar-w);
+            background: var(--v1-sidebar-bg);
+            z-index: 1030;
+            display: flex; flex-direction: column;
+            overflow-y: auto; overflow-x: hidden;
+            transition: transform .3s cubic-bezier(.4,0,.2,1);
+        }
+        .v1-sidebar::-webkit-scrollbar { width: 3px; }
+        .v1-sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 2px; }
+
+        .v1-logo {
+            display: flex; align-items: center; gap: .75rem;
+            padding: 0 1.25rem; min-height: var(--v1-topbar-h);
+            border-bottom: 1px solid rgba(255,255,255,.06);
+            text-decoration: none; flex-shrink: 0;
+        }
+        .v1-logo-icon {
+            width: 34px; height: 34px; border-radius: 9px;
+            background: var(--v1-accent);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; color: #fff; flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(79,142,247,.35);
+        }
+        .v1-logo-text { color: #f1f5f9; font-weight: 700; font-size: 1.05rem; letter-spacing: .2px; line-height: 1.2; }
+        .v1-logo-ver  { color: var(--v1-accent); font-size: .6rem; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
+
+        .v1-nav-label {
+            padding: 1rem 1.25rem .3rem;
+            font-size: .63rem; font-weight: 700;
+            color: rgba(148,163,184,.5);
+            text-transform: uppercase; letter-spacing: 1.1px;
+        }
+        .v1-nav { list-style: none; padding: 0; margin: 0; padding-bottom: 1rem; }
+        .v1-nav li a {
+            display: flex; align-items: center; gap: .6rem;
+            padding: .5rem 1.25rem;
+            font-size: .845rem; color: #94a3b8;
+            text-decoration: none;
+            border-left: 3px solid transparent;
+            margin: 1px 4px 1px 0;
+            border-radius: 0 8px 8px 0;
+            transition: var(--v1-tr);
+            min-height: 42px;
+            position: relative; overflow: hidden;
+        }
+        .v1-nav li a i { font-size: 1rem; width: 1.1rem; text-align: center; flex-shrink: 0; }
+        .v1-nav li a:hover { background: rgba(255,255,255,.07); color: #e2e8f0; border-left-color: rgba(79,142,247,.3); }
+        .v1-nav li a.active { background: rgba(79,142,247,.14); color: var(--v1-accent); border-left-color: var(--v1-accent); font-weight: 600; }
+        /* Nav ripple */
+        .v1-nav li a::after { content: ''; position: absolute; inset: 0; background: rgba(255,255,255,.06); transform: scale(0); border-radius: 50%; transition: transform .4s ease, opacity .4s ease; opacity: 0; }
+        .v1-nav li a:active::after { transform: scale(4); opacity: 1; transition: 0s; }
+
+        /* ── TOPBAR ── */
+        .v1-topbar {
+            position: fixed; top: 0; left: var(--v1-sidebar-w); right: 0;
+            height: var(--v1-topbar-h);
+            background: #fff; border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 1px 8px rgba(0,0,0,.06);
+            z-index: 1020;
+            display: flex; align-items: center; gap: .75rem;
+            padding: 0 1.5rem;
+            transition: left .3s cubic-bezier(.4,0,.2,1);
+        }
+        .v1-topbar-toggle {
+            width: 36px; height: 36px; border-radius: 8px;
+            border: none; background: transparent; cursor: pointer;
+            display: none; align-items: center; justify-content: center;
+            font-size: 1.2rem; color: #64748b;
+            transition: var(--v1-tr);
+        }
+        .v1-topbar-toggle:hover { background: #f1f5f9; color: #1e293b; }
+        .v1-topbar-title { flex: 1; font-weight: 600; font-size: 1rem; color: #1e293b; }
+
+        .v1-topbar-btn {
+            width: 36px; height: 36px; border-radius: 9px;
+            border: none; background: transparent; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.15rem; color: #64748b;
+            position: relative; text-decoration: none;
+            transition: var(--v1-tr);
+        }
+        .v1-topbar-btn:hover { background: #f1f5f9; color: #1e293b; }
+
+        .v1-ver-pill {
+            display: inline-flex; align-items: center; gap: .3rem;
+            padding: .22rem .65rem; border-radius: 20px;
+            font-size: .7rem; font-weight: 700; letter-spacing: .3px;
+            cursor: pointer;
+            border: 1.5px solid var(--v1-accent); color: var(--v1-accent);
+            background: rgba(79,142,247,.08);
+            transition: var(--v1-tr); white-space: nowrap;
+        }
+        .v1-ver-pill:hover { background: var(--v1-accent); color: #fff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79,142,247,.3); }
+
+        /* ── SHELL ── */
+        .v1-wrap { margin-left: var(--v1-sidebar-w); padding-top: var(--v1-topbar-h); min-height: 100vh; display: flex; flex-direction: column; transition: margin-left .3s cubic-bezier(.4,0,.2,1); }
+        .v1-content { flex: 1; padding: 1.5rem; }
+        .v1-footer { text-align: center; padding: .85rem; font-size: .75rem; color: #94a3b8; border-top: 1px solid #e2e8f0; background: #fff; }
+
+        /* ── CARDS ── */
+        .card { border: none; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.04); transition: transform .2s, box-shadow .2s; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,.1); }
+        .card-header { background: #fff; border-bottom: 1px solid #f1f5f9; padding: .9rem 1.25rem; font-weight: 600; border-radius: 12px 12px 0 0 !important; }
+        .card-body { padding: 1.25rem; }
+
+        /* ── TABLES ── */
+        .table { font-size: .85rem; }
+        .table thead th { background: #f8fafc; border-bottom: 2px solid #e2e8f0; font-size: .74rem; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: #64748b; }
+        .table tbody tr { transition: background .15s; }
+        .table tbody tr:hover { background: rgba(79,142,247,.04) !important; }
+
+        /* ── BUTTONS ── */
+        .btn { border-radius: 8px; font-weight: 500; font-size: .855rem; transition: var(--v1-tr); }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,.12); }
+        .btn:active { transform: translateY(0); box-shadow: none; }
+        .btn-primary { background: var(--v1-accent); border-color: var(--v1-accent); }
+        .btn-primary:hover { background: var(--v1-accent-dk); border-color: var(--v1-accent-dk); }
+        /* Ripple */
+        .btn { overflow: hidden; position: relative; }
+        .btn::after { content: ''; position: absolute; inset: 0; background: rgba(255,255,255,.2); transform: scale(0); border-radius: 50%; transition: transform .4s ease, opacity .4s ease; opacity: 0; }
+        .btn:active::after { transform: scale(3); opacity: 1; transition: 0s; }
+
+        /* ── FORMS ── */
+        .form-control, .form-select { border-radius: 8px; border-color: #e2e8f0; font-size: .875rem; transition: border-color .18s, box-shadow .18s; }
+        .form-control:focus, .form-select:focus { border-color: var(--v1-accent); box-shadow: 0 0 0 .2rem rgba(79,142,247,.18); }
+
+        /* ── BADGES & ALERTS ── */
+        .badge { border-radius: 6px; font-size: .7rem; font-weight: 600; }
+        .alert { border: none; border-radius: 10px; border-left: 4px solid; }
+        .alert-success { border-left-color: #22c55e; background: #f0fdf4; color: #166534; }
+        .alert-danger  { border-left-color: #ef4444; background: #fef2f2; color: #991b1b; }
+
+        /* ── DROPDOWN MENU ── */
+        .dropdown-menu { border: none; box-shadow: 0 10px 40px rgba(0,0,0,.12); border-radius: 12px; font-size: .855rem; }
+        .dropdown-item { border-radius: 6px; margin: 1px 6px; padding: .45rem .75rem; transition: background .15s; }
+        .dropdown-item:hover { background: #f1f5f9; }
+
+        /* ── OVERLAY (mobile) ── */
+        .v1-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 1028; backdrop-filter: blur(1px); }
+        .v1-overlay.open { display: block; }
+
+        /* ── DataTables ── */
+        .dataTables_wrapper .dataTables_paginate .page-item.active .page-link { background-color: var(--v1-accent) !important; border-color: var(--v1-accent) !important; }
+        .dataTables_wrapper .dataTables_paginate .page-item:not(.disabled):not(.active) .page-link:hover { background-color: rgba(79,142,247,.08) !important; color: var(--v1-accent) !important; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 991.98px) {
+            .v1-sidebar { transform: translateX(-100%); }
+            .v1-sidebar.open { transform: translateX(0); }
+            .v1-topbar { left: 0; }
+            .v1-wrap { margin-left: 0; }
+            .v1-topbar-toggle { display: flex !important; }
+        }
+
+        /* ── SNEAT CLASS POLYFILLS (so other pages render cleanly) ── */
+        .bg-label-primary   { background: rgba(79,142,247,.12) !important; color: #2563eb !important; border-radius: 6px; }
+        .bg-label-success   { background: rgba(34,197,94,.12)  !important; color: #16a34a !important; border-radius: 6px; }
+        .bg-label-warning   { background: rgba(245,158,11,.18) !important; color: #b45309 !important; border-radius: 6px; }
+        .bg-label-danger    { background: rgba(239,68,68,.12)  !important; color: #dc2626 !important; border-radius: 6px; }
+        .bg-label-info      { background: rgba(59,130,246,.12) !important; color: #0369a1 !important; border-radius: 6px; }
+        .bg-label-secondary { background: rgba(100,116,139,.12)!important; color: #475569 !important; border-radius: 6px; }
+        .btn-label-primary  { background: rgba(79,142,247,.12) !important; color: #2563eb !important; border: none; }
+        .btn-label-success  { background: rgba(34,197,94,.12)  !important; color: #16a34a !important; border: none; }
+        .btn-label-warning  { background: rgba(245,158,11,.18) !important; color: #b45309 !important; border: none; }
+        .btn-label-danger   { background: rgba(239,68,68,.12)  !important; color: #dc2626 !important; border: none; }
+        .btn-label-info     { background: rgba(59,130,246,.12) !important; color: #0369a1 !important; border: none; }
+        .avatar      { display: inline-flex; width: 36px; height: 36px; border-radius: 8px; overflow: hidden; flex-shrink: 0; }
+        .avatar-sm   { width: 28px; height: 28px; border-radius: 6px; }
+        .avatar-online::before { content: ''; position: absolute; width: 8px; height: 8px; background: #22c55e; border-radius: 50%; border: 2px solid #fff; bottom: 0; right: 0; }
+        .avatar-initial { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-weight: 700; font-size: .82rem; }
+        .badge-present  { background: rgba(34,197,94,.15);  color: #16a34a; }
+        .badge-late     { background: rgba(245,158,11,.2);  color: #b45309; }
+        .badge-absent   { background: rgba(239,68,68,.15);  color: #dc2626; }
+        .badge-on_leave { background: rgba(59,130,246,.15); color: #0369a1; }
+        /* Suppress dashboard.css gradient card in V1 */
+        .welcome-card { background: var(--v1-accent) !important; }
+    </style>
+</head>
+<body>
+
+<div class="v1-overlay" id="v1Overlay"></div>
+
+{{-- ═══ SIDEBAR ═══ --}}
+<aside class="v1-sidebar" id="v1Sidebar">
+    <a href="{{ route('dashboard') }}" class="v1-logo">
+        <div class="v1-logo-icon"><i class="bi bi-activity"></i></div>
+        <div><div class="v1-logo-text">IEAMS</div><div class="v1-logo-ver">Classic v1</div></div>
+    </a>
+
+    <ul class="v1-nav pt-2">
+
+        <li><a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
+            <i class="bi bi-house-door"></i><span>Dashboard</span>
+        </a></li>
+
+        @hasanyrole(['branch_manager','admin','superadmin'])
+        <li><div class="v1-nav-label">Management</div></li>
+        <li><a href="{{ route('branches.index') }}" class="{{ request()->routeIs('branches.*') ? 'active' : '' }}">
+            <i class="bi bi-building"></i><span>Branches</span>
+        </a></li>
+        @endhasanyrole
+
+        @hasanyrole(['hr','admin','superadmin'])
+        <li><a href="{{ route('employees.index') }}" class="{{ request()->routeIs('employees.*') ? 'active' : '' }}">
+            <i class="bi bi-people"></i><span>Employees</span>
+        </a></li>
+        @endhasanyrole
+
+        <li><div class="v1-nav-label">Attendance</div></li>
+        <li><a href="{{ route('attendance.record') }}" class="{{ request()->routeIs('attendance.record') ? 'active' : '' }}">
+            <i class="bi bi-clock"></i><span>Time In/Out</span>
+        </a></li>
+
+        @hasanyrole(['branch_manager','hr','admin','superadmin'])
+        <li><a href="{{ route('attendance.monitor') }}" class="{{ request()->routeIs('attendance.monitor') ? 'active' : '' }}">
+            <i class="bi bi-display"></i><span>Monitor</span>
+        </a></li>
+        <li><a href="{{ route('attendance.manage') }}" class="{{ request()->routeIs('attendance.manage') ? 'active' : '' }}">
+            <i class="bi bi-pencil-square"></i><span>Manage</span>
+        </a></li>
+        <li>
+            @php $v1PendingCorr = \App\Models\AttendanceCorrection::where('status','pending')->count(); @endphp
+            <a href="{{ route('attendance.corrections') }}" class="{{ request()->routeIs('attendance.corrections') ? 'active' : '' }}">
+                <i class="bi bi-arrow-repeat"></i><span>Corrections</span>
+                @if($v1PendingCorr)<span class="badge bg-warning text-dark ms-auto">{{ $v1PendingCorr }}</span>@endif
+            </a>
+        </li>
+        @endhasanyrole
+
+        <li><div class="v1-nav-label">Leaves</div></li>
+        <li><a href="{{ route('leaves.index') }}" class="{{ request()->routeIs('leaves.index') ? 'active' : '' }}">
+            <i class="bi bi-calendar3"></i><span>My Leaves</span>
+        </a></li>
+        <li><a href="{{ route('leaves.create') }}" class="{{ request()->routeIs('leaves.create') ? 'active' : '' }}">
+            <i class="bi bi-calendar-plus"></i><span>Request Leave</span>
+        </a></li>
+
+        @hasanyrole(['hr','admin','superadmin'])
+        <li><div class="v1-nav-label">Reports</div></li>
+        <li><a href="{{ route('reports.index') }}" class="{{ request()->routeIs('reports.*') ? 'active' : '' }}">
+            <i class="bi bi-file-earmark-bar-graph"></i><span>Reports</span>
+        </a></li>
+        <li><a href="{{ route('analytics.index') }}" class="{{ request()->routeIs('analytics.*') ? 'active' : '' }}">
+            <i class="bi bi-graph-up"></i><span>Analytics</span>
+        </a></li>
+        <li><a href="{{ route('forecasting.index') }}" class="{{ request()->routeIs('forecasting.*') ? 'active' : '' }}">
+            <i class="bi bi-graph-up-arrow"></i><span>Forecasting</span>
+        </a></li>
+        @endhasanyrole
+
+        @hasanyrole(['admin','superadmin'])
+        <li><div class="v1-nav-label">System</div></li>
+        <li><a href="{{ route('shifts.index') }}" class="{{ request()->routeIs('shifts.*') ? 'active' : '' }}">
+            <i class="bi bi-stopwatch"></i><span>Shifts</span>
+        </a></li>
+        <li><a href="{{ route('notifications.index') }}" class="{{ request()->routeIs('notifications.*') ? 'active' : '' }}">
+            <i class="bi bi-bell"></i><span>Notifications</span>
+        </a></li>
+        <li><a href="{{ route('audit-logs.index') }}" class="{{ request()->routeIs('audit-logs.*') ? 'active' : '' }}">
+            <i class="bi bi-shield-check"></i><span>Audit Logs</span>
+        </a></li>
+        <li><a href="{{ route('backups.index') }}" class="{{ request()->routeIs('backups.*') ? 'active' : '' }}">
+            <i class="bi bi-server"></i><span>Backups</span>
+        </a></li>
+        @endhasanyrole
+
+        @hasrole('superadmin')
+        <li><div class="v1-nav-label">Administration</div></li>
+        <li><a href="{{ route('admin.users.index') }}" class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+            <i class="bi bi-person-badge"></i><span>Users</span>
+        </a></li>
+        <li><a href="{{ route('admin.settings.index') }}" class="{{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
+            <i class="bi bi-gear"></i><span>Settings</span>
+        </a></li>
+        @endhasrole
+
+    </ul>
+</aside>
+
+{{-- ═══ MAIN WRAPPER ═══ --}}
+<div class="v1-wrap" id="v1Main">
+
+    {{-- TOP BAR --}}
+    <header class="v1-topbar">
+        <button class="v1-topbar-toggle" id="v1SidebarBtn" aria-label="Toggle sidebar">
+            <i class="bi bi-list"></i>
+        </button>
+
+        <div class="v1-topbar-title">@yield('title', 'Dashboard')</div>
+
+        <div class="d-flex align-items-center gap-2">
+
+            {{-- Notifications --}}
+            <div class="dropdown">
+                <button class="v1-topbar-btn" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+                    <i class="bi bi-bell"></i>
+                    @if($v1Unread > 0)
+                    <span id="v1NotifBadge" class="position-absolute badge bg-danger rounded-pill" style="font-size:.55rem;top:3px;right:3px;padding:.2em .35em;min-width:16px">{{ $v1Unread > 9 ? '9+' : $v1Unread }}</span>
+                    @else
+                    <span id="v1NotifBadge" class="position-absolute badge bg-danger rounded-pill" style="font-size:.55rem;top:3px;right:3px;padding:.2em .35em;min-width:16px;display:none">0</span>
+                    @endif
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end p-0" style="width:300px;border-radius:14px;overflow:hidden">
+                    <li class="px-3 py-2 d-flex align-items-center justify-content-between" style="border-bottom:1px solid #f1f5f9;background:#fafbfc">
+                        <span style="font-size:.82rem;font-weight:700;color:#1e293b">Notifications</span>
+                        @if($v1Unread > 0)
+                        <form method="POST" action="{{ route('notifications.read-all') }}" class="m-0">@csrf
+                            <button class="btn btn-sm py-0 px-2" style="font-size:.7rem;background:#f1f5f9;border-radius:6px;border:none">Mark all read</button>
+                        </form>
+                        @endif
+                    </li>
+                    <div style="max-height:290px;overflow-y:auto">
+                        @forelse(auth()->user()->unreadNotifications->take(5) as $notif)
+                        <li>
+                            <a class="dropdown-item px-3 py-2" href="{{ route('notifications.index') }}" style="white-space:normal;border-bottom:1px solid #f8fafc">
+                                <div style="font-size:.8rem;font-weight:600;color:#1e293b">{{ $notif->data['title'] ?? 'Notification' }}</div>
+                                <div class="text-muted" style="font-size:.75rem">{{ $notif->data['message'] ?? '' }}</div>
+                                <div class="text-muted" style="font-size:.7rem">{{ $notif->created_at->diffForHumans() }}</div>
+                            </a>
+                        </li>
+                        @empty
+                        <li class="text-center py-4" style="color:#94a3b8;font-size:.82rem">
+                            <i class="bi bi-bell-slash d-block fs-4 mb-1"></i>All caught up!
+                        </li>
+                        @endforelse
+                    </div>
+                    <li style="border-top:1px solid #f1f5f9">
+                        <a class="dropdown-item text-center py-2" style="font-size:.8rem;color:var(--v1-accent);font-weight:600" href="{{ route('notifications.index') }}">View all notifications</a>
+                    </li>
+                </ul>
+            </div>
+
+            {{-- User menu --}}
+            <div class="dropdown">
+                <button class="v1-topbar-btn d-flex align-items-center gap-2" style="width:auto;padding:.2rem .5rem;border-radius:10px" data-bs-toggle="dropdown">
+                    <div style="width:30px;height:30px;border-radius:8px;background:var(--v1-accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0">
+                        {{ substr(auth()->user()->name, 0, 1) }}
+                    </div>
+                    <div class="d-none d-md-block text-start" style="line-height:1.2">
+                        <div style="font-size:.8rem;font-weight:600;color:#1e293b">{{ auth()->user()->name }}</div>
+                        <div style="font-size:.68rem;color:#94a3b8;text-transform:capitalize">{{ auth()->user()->roles->pluck('name')->first() ?? 'Employee' }}</div>
+                    </div>
+                    <i class="bi bi-chevron-down d-none d-md-inline" style="font-size:.65rem;color:#94a3b8"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" style="min-width:185px">
+                    <li><a class="dropdown-item" href="{{ route('profile.edit') }}"><i class="bi bi-person me-2 text-muted"></i>My Profile</a></li>
+                    @hasrole('superadmin')
+                    <li><a class="dropdown-item" href="{{ route('admin.settings.index') }}"><i class="bi bi-gear me-2 text-muted"></i>Settings</a></li>
+                    @endhasrole
+                    <li><hr class="dropdown-divider my-1"></li>
+                    <li>
+                        <form method="POST" action="{{ route('logout') }}" class="m-0">@csrf
+                            <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right me-2"></i>Log Out</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+    </header>
+
+    {{-- CONTENT --}}
+    <main class="v1-content">
+        @if(session('success'))
+        <div class="alert alert-success alert-dismissible mb-3" role="alert">
+            <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        @endif
+        @if(session('error'))
+        <div class="alert alert-danger alert-dismissible mb-3" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>{{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        @endif
+        @if($errors->any())
+        <div class="alert alert-danger alert-dismissible mb-3" role="alert">
+            <ul class="mb-0">@foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach</ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        @endif
+
+        @yield('content')
+    </main>
+
+    <footer class="v1-footer">
+        &copy; {{ date('Y') }} IEAMS &mdash; Employee Attendance Management System &mdash;
+        <span style="color:var(--v1-accent);font-weight:600">Classic v1</span>
+    </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+@stack('scripts')
+<script>
+(function () {
+    var sidebarBtn = document.getElementById('v1SidebarBtn');
+    var sidebar    = document.getElementById('v1Sidebar');
+    var overlay    = document.getElementById('v1Overlay');
+    if (sidebarBtn) {
+        sidebarBtn.addEventListener('click', function () {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        });
+        overlay.addEventListener('click', function () {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+        });
+    }
+    setTimeout(function () {
+        document.querySelectorAll('.alert').forEach(function (a) {
+            try { new bootstrap.Alert(a).close(); } catch (e) {}
+        });
+    }, 5000);
+}());
+</script>
+@auth
+<script>
+(function () {
+    var POLL_URL  = '{{ route('notifications.poll') }}';
+    var INTERVAL  = {{ config('notifications.poll_interval', 5000) }};
+    var CSRF      = '{{ csrf_token() }}';
+    var lastCount = {{ auth()->user()->unreadNotifications()->count() }};
+
+    function updateBadge(count) {
+        var badge = document.getElementById('v1NotifBadge');
+        if (!badge) return;
+        if (count > 0) {
+            badge.textContent = count > 9 ? '9+' : count;
+            badge.style.display = '';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    function poll() {
+        fetch(POLL_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.unread !== lastCount) {
+                    lastCount = data.unread;
+                    updateBadge(data.unread);
+                }
+            }).catch(function () {});
+    }
+
+    setInterval(poll, INTERVAL);
+}());
+</script>
+@endauth
+
+</body>
+</html>
+@else
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="{{ asset('assets/') }}/" data-template="vertical-menu-template-free">
 <head>
@@ -462,7 +951,7 @@
                                         <div class="dropdown-divider"></div>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item" href="{{ route('dashboard') }}">
+                                        <a class="dropdown-item" href="{{ route('profile.edit') }}">
                                             <i class="bx bx-user me-2"></i>
                                             <span class="align-middle">My Profile</span>
                                         </a>
@@ -1284,3 +1773,4 @@
     @endauth
 </body>
 </html>
+@endif

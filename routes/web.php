@@ -23,6 +23,13 @@ Route::get('/', fn() => redirect()->route('login'));
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
+    // UI Version Switcher
+    Route::post('/ui/version', function (\Illuminate\Http\Request $request) {
+        $version = in_array($request->input('version'), ['v1', 'v2']) ? $request->input('version') : 'v2';
+        session(['ui_version' => $version]);
+        return back();
+    })->name('ui.version');
+
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 

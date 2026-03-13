@@ -2,7 +2,10 @@
 @section('title', 'Dashboard')
 
 @push('styles')
+{{-- dashboard.css only needed for V2 Sneat-style layout --}}
+@if(session('ui_version','v2') !== 'v1')
 <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+@endif
 @endpush
 
 @section('content')
@@ -21,6 +24,100 @@
     $wkAbsent  = $weeklyTrend->pluck('absent')->toArray();
 @endphp
 
+@if(session('ui_version', 'v2') === 'v1')
+{{-- ═══════════════════════════════════════════════════════════
+     V1 CLASSIC DASHBOARD
+═══════════════════════════════════════════════════════════ --}}
+<h4 class="fw-bold mb-4">Dashboard Overview</h4>
+
+{{-- 4 Stat Cards --}}
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card text-white h-100" style="background:#22c55e;border-radius:12px;border:none">
+            <div class="card-body py-3 px-3">
+                <div style="font-size:.75rem;opacity:.85;font-weight:700;text-transform:uppercase;letter-spacing:.6px">Present Days</div>
+                <div style="font-size:2.8rem;font-weight:700;line-height:1.1;margin-top:4px">{{ $present }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-white h-100" style="background:#f59e0b;border-radius:12px;border:none">
+            <div class="card-body py-3 px-3">
+                <div style="font-size:.75rem;opacity:.85;font-weight:700;text-transform:uppercase;letter-spacing:.6px">Late</div>
+                <div style="font-size:2.8rem;font-weight:700;line-height:1.1;margin-top:4px">{{ $late }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-white h-100" style="background:#ef4444;border-radius:12px;border:none">
+            <div class="card-body py-3 px-3">
+                <div style="font-size:.75rem;opacity:.85;font-weight:700;text-transform:uppercase;letter-spacing:.6px">Absent</div>
+                <div style="font-size:2.8rem;font-weight:700;line-height:1.1;margin-top:4px">{{ $absent }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-white h-100" style="background:#3b82f6;border-radius:12px;border:none">
+            <div class="card-body py-3 px-3">
+                <div style="font-size:.75rem;opacity:.85;font-weight:700;text-transform:uppercase;letter-spacing:.6px">On Leave</div>
+                <div style="font-size:2.8rem;font-weight:700;line-height:1.1;margin-top:4px">{{ $onLeave }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Weekly Chart + Leave Requests --}}
+<div class="row g-4">
+    <div class="col-12 col-lg-7">
+        <div class="card h-100" style="border:none;border-radius:12px">
+            <div class="card-body">
+                <h5 class="fw-bold mb-1">Weekly Attendance Overview</h5>
+                <small class="text-muted d-block mb-3">Attendance rate % — last 7 days</small>
+                <canvas id="v1WeeklyChart" height="120"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-5">
+        <div class="card h-100" style="border:none;border-radius:12px">
+            <div class="card-body">
+                <h5 class="fw-bold mb-3">Recent Leaves</h5>
+                <table class="table table-hover table-sm mb-0">
+                    <thead class="text-muted small">
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($recentLeaves as $leave)
+                        <tr>
+                            <td class="text-nowrap small">{{ $leave->created_at->format('M d, Y') }}</td>
+                            <td class="small">{{ ucwords(str_replace('_', ' ', $leave->leave_type)) }}</td>
+                            <td>
+                                @if($leave->status === 'pending')
+                                    <span class="badge" style="background:#fff3cd;color:#92400e">Pending</span>
+                                @elseif($leave->status === 'approved')
+                                    <span class="badge" style="background:#dcfce7;color:#166534">Approved</span>
+                                @else
+                                    <span class="badge" style="background:#fee2e2;color:#991b1b">Denied</span>
+                                @endif
+                            </td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="3" class="text-center text-muted py-3 small">No leave requests yet.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+                <div class="mt-3">
+                    <a href="{{ route('leaves.index') }}" class="btn btn-sm btn-outline-secondary">View All Leaves</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@else
 {{-- Branch filter --}}
 @hasanyrole(['admin','superadmin','hr'])
 <div class="d-flex align-items-center gap-2 mb-4">
@@ -377,9 +474,45 @@
     </div>
 
 </div>
+@endif
 @endsection
 
 @push('scripts')
+@if(session('ui_version', 'v2') === 'v1')
+<script>
+new Chart(document.getElementById('v1WeeklyChart'), {
+    type: 'line',
+    data: {
+        labels: @json($weeklyTrend->pluck('date')),
+        datasets: [{
+            label: 'Attendance Rate (%)',
+            data: @json($weeklyTrend->map(fn($d) =>
+                ($d['present'] + $d['late'] + $d['absent']) > 0
+                    ? round(($d['present'] + $d['late']) / ($d['present'] + $d['late'] + $d['absent']) * 100)
+                    : 0
+            )),
+            borderColor: '#4f8ef7',
+            backgroundColor: 'rgba(79,142,247,.1)',
+            borderWidth: 2.5,
+            tension: 0.4,
+            fill: true,
+            pointRadius: 4,
+            pointBackgroundColor: '#fff',
+            pointBorderColor: '#4f8ef7',
+            pointBorderWidth: 2,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: 'top' } },
+        scales: {
+            y: { beginAtZero: true, max: 100, grid: { color: 'rgba(0,0,0,0.05)' } },
+            x: { grid: { display: false } }
+        }
+    }
+});
+</script>
+@else
 <script>
 const wkLabels  = @json($weeklyTrend->pluck('date'));
 const wkPresent = @json($weeklyTrend->pluck('present'));
@@ -451,4 +584,5 @@ new Chart(document.getElementById('rateDonut'), {
     }
 });
 </script>
+@endif
 @endpush
