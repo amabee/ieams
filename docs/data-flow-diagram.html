@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IEAMS — Data Flow Diagram</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f4f6fb;
+            color: #2d3748;
+            padding: 40px 24px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #718096;
+            margin-bottom: 48px;
+            font-size: 0.95rem;
+        }
+        .section {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            padding: 32px 28px;
+            margin-bottom: 40px;
+            max-width: 1100px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .section h2 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: #1a202c;
+        }
+        .section p.desc {
+            font-size: 0.87rem;
+            color: #718096;
+            margin-bottom: 28px;
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            margin-top: 28px;
+            justify-content: center;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.82rem;
+            color: #4a5568;
+        }
+        .legend-box {
+            width: 28px;
+            height: 18px;
+            border-radius: 3px;
+            border: 2px solid #000;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #a0aec0;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Integrated Employee Attendance Management System</h1>
+<p class="subtitle">Data Flow Diagram &nbsp;|&nbsp; IEAMS &nbsp;|&nbsp; Academic Documentation</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- LEVEL 0 — CONTEXT DIAGRAM                                  -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section">
+    <h2>Level 0 — Context Diagram</h2>
+    <p class="desc">Shows the IEAMS as a single process and its interactions with all external entities.</p>
+    <div class="mermaid">
+flowchart LR
+    subgraph EMP["👤 Employee"]
+    end
+    subgraph HR["🏢 HR / Admin"]
+    end
+    subgraph BM["📊 Branch Manager"]
+    end
+    subgraph SYS["⚙️ Automated System"]
+    end
+
+    IEAMS(["🖥️ IEAMS\nIntegrated Employee\nAttendance Management\nSystem"])
+
+    EMP -->|"Time-in / Time-out\nLeave Request"| IEAMS
+    IEAMS -->|"Attendance Confirmation\nLeave Status / Notification"| EMP
+
+    HR -->|"Employee Data\nUser & Role Assignment\nSystem Settings\nReport Parameters"| IEAMS
+    IEAMS -->|"Generated Reports\nAnalytics / Insights\nAudit Logs"| HR
+
+    BM -->|"Attendance Corrections\nLeave Approval\nBranch Filters"| IEAMS
+    IEAMS -->|"Branch Attendance Summary\nAbsenteeism Forecast\nAlerts"| BM
+
+    SYS -->|"Scheduled Report Trigger\nAuto-absent Detection"| IEAMS
+    IEAMS -->|"Email Notifications\nBackup Files\nForecast Records"| SYS
+
+    style IEAMS fill:#4f46e5,color:#fff,stroke:#3730a3,rx:12
+    style EMP fill:#dbeafe,stroke:#3b82f6
+    style HR fill:#d1fae5,stroke:#10b981
+    style BM fill:#fef3c7,stroke:#f59e0b
+    style SYS fill:#fce7f3,stroke:#ec4899
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- LEVEL 1 — DETAILED DFD                                     -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section">
+    <h2>Level 1 — Detailed Data Flow Diagram</h2>
+    <p class="desc">Expands IEAMS into its core processes, showing internal data flows and data stores.</p>
+    <div class="mermaid">
+flowchart TB
+    %% ── External Entities ──────────────────────────────────────
+    EMP(["👤 Employee"])
+    HR(["🏢 HR / Admin"])
+    BM(["📊 Branch Manager"])
+    AUTO(["⚙️ Automated\nSystem"])
+
+    %% ── Data Stores ─────────────────────────────────────────────
+    D1[("D1\nEmployees")]
+    D2[("D2\nAttendance\nRecords")]
+    D3[("D3\nLeaves")]
+    D4[("D4\nForecasts")]
+    D5[("D5\nUsers & Roles")]
+    D6[("D6\nSystem\nSettings")]
+    D7[("D7\nNotifications")]
+    D8[("D8\nAudit Logs")]
+
+    %% ── Processes ────────────────────────────────────────────────
+    P1["1.0\nAttendance\nRecording"]
+    P2["2.0\nLeave\nManagement"]
+    P3["3.0\nEmployee\nManagement"]
+    P4["4.0\nUser & Role\nManagement"]
+    P5["5.0\nReporting &\nAnalytics"]
+    P6["6.0\nForecasting\nEngine"]
+    P7["7.0\nNotification\nService"]
+    P8["8.0\nSystem\nConfiguration"]
+
+    %% ── Employee Flows ───────────────────────────────────────────
+    EMP -->|"Time-in / Time-out"| P1
+    P1 -->|"Record confirmation"| EMP
+    P1 -->|"Write record"| D2
+    P1 -->|"Read employee info"| D1
+    P1 -->|"Read shift settings"| D6
+
+    EMP -->|"Leave request"| P2
+    P2 -->|"Leave status"| EMP
+    P2 -->|"Write leave record"| D3
+    P2 -->|"Read employee info"| D1
+    P2 -->|"Trigger notification"| P7
+
+    %% ── HR / Admin Flows ─────────────────────────────────────────
+    HR -->|"Employee data"| P3
+    P3 -->|"Write / Update"| D1
+    P3 -->|"Read branches & positions"| D6
+
+    HR -->|"User data / Role assignment"| P4
+    P4 -->|"Write / Update"| D5
+    P4 -->|"Write action"| D8
+
+    HR -->|"Report parameters"| P5
+    P5 -->|"Read"| D2
+    P5 -->|"Read"| D3
+    P5 -->|"Read"| D1
+    P5 -->|"Read"| D4
+    P5 -->|"Reports & Insights"| HR
+
+    HR -->|"Settings values"| P8
+    P8 -->|"Write"| D6
+
+    %% ── Branch Manager Flows ─────────────────────────────────────
+    BM -->|"Attendance correction"| P1
+    BM -->|"Leave approval / denial"| P2
+    P2 -->|"Leave approval result"| BM
+    BM -->|"Branch / horizon filter"| P6
+    P6 -->|"Forecast results"| BM
+
+    %% ── Forecasting Flows ────────────────────────────────────────
+    P6 -->|"Read historical data"| D2
+    P6 -->|"Read settings (alpha/beta/gamma)"| D6
+    P6 -->|"Write predictions"| D4
+
+    %% ── Automation Flows ─────────────────────────────────────────
+    AUTO -->|"Scheduled trigger"| P6
+    AUTO -->|"Scheduled trigger"| P5
+    P1 -->|"Auto-absent mark"| D2
+
+    %% ── Notification Flows ───────────────────────────────────────
+    P7 -->|"Write notification"| D7
+    P7 -->|"Send email / in-app"| EMP
+    P7 -->|"Send email / in-app"| HR
+    P7 -->|"Send email / in-app"| BM
+    P2 -->|"Approval / denial alert"| P7
+    P3 -->|"Account created alert"| P7
+
+    %% ── Audit Log Flows ──────────────────────────────────────────
+    P1 -->|"Write audit entry"| D8
+    P2 -->|"Write audit entry"| D8
+    P3 -->|"Write audit entry"| D8
+    P4 -->|"Write audit entry"| D8
+
+    %% ── Styles ───────────────────────────────────────────────────
+    classDef entity    fill:#e0e7ff,stroke:#6366f1,color:#1e1b4b,rx:50
+    classDef process   fill:#f0fdf4,stroke:#22c55e,color:#14532d
+    classDef datastore fill:#fff7ed,stroke:#f97316,color:#7c2d12
+    classDef auto      fill:#fdf2f8,stroke:#d946ef,color:#701a75
+
+    class EMP,HR,BM entity
+    class AUTO auto
+    class P1,P2,P3,P4,P5,P6,P7,P8 process
+    class D1,D2,D3,D4,D5,D6,D7,D8 datastore
+    </div>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-box" style="background:#e0e7ff;border-color:#6366f1;border-radius:50%"></div>
+            External Entity (User / Actor)
+        </div>
+        <div class="legend-item">
+            <div class="legend-box" style="background:#f0fdf4;border-color:#22c55e"></div>
+            Process
+        </div>
+        <div class="legend-item">
+            <div class="legend-box" style="background:#fff7ed;border-color:#f97316"></div>
+            Data Store
+        </div>
+        <div class="legend-item">
+            <div class="legend-box" style="background:#fdf2f8;border-color:#d946ef"></div>
+            Automated System
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PROCESS DESCRIPTIONS                                        -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section">
+    <h2>Process Descriptions</h2>
+    <p class="desc">Brief description of each numbered process in the Level 1 DFD.</p>
+    <table style="width:100%;border-collapse:collapse;font-size:0.88rem">
+        <thead>
+            <tr style="background:#f7fafc">
+                <th style="padding:10px 14px;text-align:left;border-bottom:2px solid #e2e8f0;width:110px">Process</th>
+                <th style="padding:10px 14px;text-align:left;border-bottom:2px solid #e2e8f0">Description</th>
+                <th style="padding:10px 14px;text-align:left;border-bottom:2px solid #e2e8f0">Actors</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr style="border-bottom:1px solid #e2e8f0">
+                <td style="padding:10px 14px;font-weight:600">1.0 Attendance Recording</td>
+                <td style="padding:10px 14px">Handles employee time-in/time-out, computes hours worked, determines status (present/late/absent/half-day), supports manual corrections and auto-absent marking.</td>
+                <td style="padding:10px 14px">Employee, Branch Manager</td>
+            </tr>
+            <tr style="border-bottom:1px solid #e2e8f0">
+                <td style="padding:10px 14px;font-weight:600">2.0 Leave Management</td>
+                <td style="padding:10px 14px">Processes leave requests, tracks leave balances, handles approval/denial workflow, updates attendance records when leave is approved.</td>
+                <td style="padding:10px 14px">Employee, HR, Branch Manager</td>
+            </tr>
+            <tr style="border-bottom:1px solid #e2e8f0">
+                <td style="padding:10px 14px;font-weight:600">3.0 Employee Management</td>
+                <td style="padding:10px 14px">Manages employee profiles including personal info, employment type, branch and shift assignments, and optional user account creation.</td>
+                <td style="padding:10px 14px">HR, Admin</td>
+            </tr>
+            <tr style="border-bottom:1px solid #e2e8f0">
+                <td style="padding:10px 14px;font-weight:600">4.0 User & Role Management</td>
+                <td style="padding:10px 14px">Manages system accounts, assigns Spatie roles (admin, hr, branch_manager, employee), controls permission-based access across all modules.</td>
+                <td style="padding:10px 14px">Admin</td>
+            </tr>
+            <tr style="border-bottom:1px solid #e2e8f0">
+                <td style="padding:10px 14px;font-weight:600">5.0 Reporting & Analytics</td>
+                <td style="padding:10px 14px">Generates attendance reports (daily/monthly/custom range), computes analytics metrics (absenteeism rate, peak days, trends), and produces exportable outputs.</td>
+                <td style="padding:10px 14px">HR, Admin, Branch Manager</td>
+            </tr>
+            <tr style="border-bottom:1px solid #e2e8f0">
+                <td style="padding:10px 14px;font-weight:600">6.0 Forecasting Engine</td>
+                <td style="padding:10px 14px">Applies Holt-Winters Triple Exponential Smoothing on historical attendance data to predict future absenteeism per branch. Falls back to moving average when data is insufficient (&lt;14 tracked days).</td>
+                <td style="padding:10px 14px">Branch Manager, Admin, Automated</td>
+            </tr>
+            <tr style="border-bottom:1px solid #e2e8f0">
+                <td style="padding:10px 14px;font-weight:600">7.0 Notification Service</td>
+                <td style="padding:10px 14px">Dispatches in-app and email notifications for leave events (submitted, approved, denied), account creation, and attendance alerts to relevant actors.</td>
+                <td style="padding:10px 14px">All actors</td>
+            </tr>
+            <tr>
+                <td style="padding:10px 14px;font-weight:600">8.0 System Configuration</td>
+                <td style="padding:10px 14px">Manages global settings including organization info, late/absent thresholds, leave quotas, Holt-Winters smoothing parameters (α, β, γ), and alert email recipients.</td>
+                <td style="padding:10px 14px">Admin</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<footer>
+    IEAMS &mdash; Integrated Employee Attendance Management System &nbsp;|&nbsp; Generated Documentation
+</footer>
+
+<script>
+    mermaid.initialize({ startOnLoad: true, theme: 'default', flowchart: { curve: 'basis', padding: 20 } });
+</script>
+</body>
+</html>

@@ -80,7 +80,7 @@
                 Manage Attendance Records &mdash; {{ now()->format('F d, Y') }}
             </h5>
             <div class="d-flex align-items-center gap-2 flex-wrap ms-auto">
-                <input type="date" id="filterDate" class="form-control form-control-sm" style="width:150px" value="{{ now()->format('Y-m-d') }}">
+                <input type="date" id="filterDate" class="form-control form-control-sm" style="width:150px" value="{{ \Carbon\Carbon::today()->isSaturday() ? \Carbon\Carbon::yesterday()->format('Y-m-d') : (\Carbon\Carbon::today()->isSunday() ? \Carbon\Carbon::today()->subDays(2)->format('Y-m-d') : now()->format('Y-m-d')) }}">
                 @hasanyrole(['admin', 'superadmin', 'hr'])
                 <select id="filterBranch" class="form-select form-select-sm" style="width:145px">
                     <option value="">All Branches</option>

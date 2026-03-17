@@ -22,7 +22,7 @@ class AttendanceManagementController extends Controller
             ->when($branchId, fn ($q) => $q->whereHas('attendanceRecord', fn ($r) => $r->where('branch_id', $branchId)))
             ->get();
 
-        $summary = AttendanceRecord::whereDate('date', now()->toDateString())
+        $summary = AttendanceRecord::whereDate('date', $this->lastWeekday())
             ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->selectRaw("
                 SUM(CASE WHEN status = 'present'  THEN 1 ELSE 0 END) as present,
@@ -32,6 +32,14 @@ class AttendanceManagementController extends Controller
             ")->first();
 
         return view('attendance.manage', compact('branches', 'branchId', 'pendingCorrections', 'summary'));
+    }
+
+    private function lastWeekday(): string
+    {
+        $day = today();
+        if ($day->isSaturday()) $day->subDay();
+        elseif ($day->isSunday()) $day->subDays(2);
+        return $day->format('Y-m-d');
     }
 
     public function data(Request $request)

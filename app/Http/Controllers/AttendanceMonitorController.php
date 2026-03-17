@@ -13,7 +13,7 @@ class AttendanceMonitorController extends Controller
     {
         $user     = auth()->user();
         $branchId = $user->hasRole('branch_manager') ? $user->branch_id : $request->branch_id;
-        $date     = $request->date ?? today()->format('Y-m-d');
+        $date     = $request->date ?? $this->lastWeekday();
         $branches = Branch::where('is_active', true)->get();
 
         $summary = AttendanceRecord::where('date', $date)
@@ -32,7 +32,7 @@ class AttendanceMonitorController extends Controller
     {
         $user     = auth()->user();
         $branchId = $user->hasRole('branch_manager') ? $user->branch_id : $request->branch_id;
-        $date     = $request->date ?? today()->format('Y-m-d');
+        $date     = $request->date ?? $this->lastWeekday();
 
         $records = AttendanceRecord::with(['employee.position', 'branch'])
             ->where('date', $date)
@@ -50,5 +50,14 @@ class AttendanceMonitorController extends Controller
             ]);
 
         return response()->json(['data' => $records]);
+    }
+
+    private function lastWeekday(): string
+    {
+        $day = today();
+        // If today is Saturday(6) go back 1, if Sunday(0) go back 2
+        if ($day->isSaturday()) $day->subDay();
+        elseif ($day->isSunday()) $day->subDays(2);
+        return $day->format('Y-m-d');
     }
 }

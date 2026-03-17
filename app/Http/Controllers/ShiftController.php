@@ -78,8 +78,8 @@ class ShiftController extends Controller
         $this->authorize('create schedules');
         $validated = $request->validate([
             'name'                   => 'required|string|max:100',
-            'start_time'             => 'required',
-            'end_time'               => 'required|after:start_time',
+            'start_time'             => 'required|date_format:H:i',
+            'end_time'               => 'required|date_format:H:i|after:start_time',
             'late_threshold_minutes' => 'required|integer|min:0|max:120',
             'branch_id'              => 'nullable|exists:branches,id',
         ]);
@@ -105,8 +105,8 @@ class ShiftController extends Controller
         $this->authorize('edit schedules');
         $validated = $request->validate([
             'name'                   => 'required|string|max:100',
-            'start_time'             => 'required',
-            'end_time'               => 'required',
+            'start_time'             => 'required|date_format:H:i',
+            'end_time'               => 'required|date_format:H:i|after:start_time',
             'late_threshold_minutes' => 'required|integer|min:0|max:120',
             'branch_id'              => 'nullable|exists:branches,id',
         ]);
