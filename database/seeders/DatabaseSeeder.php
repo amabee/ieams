@@ -18,7 +18,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RoleSeeder::class,
             PositionSeeder::class,
-            DemoSeeder::class,
+            DemoSeeder::class,        // system settings + admin/hr/manager accounts
+            FakeDataSeeder::class,    // 5 branches, 125 employees, multi-year attendance + leaves
+            QuickForecastDataSeeder::class, // recent 30-day attendance for forecasting
         ]);
     }
 }

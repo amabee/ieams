@@ -121,5 +121,39 @@ class DemoSeeder extends Seeder
             'is_active'   => true,
         ]);
         $empUser2->assignRole('employee');
+
+        // Branch manager accounts — one per branch
+        $bm1 = User::firstOrCreate(['email' => 'bm.main@ieams.test'], [
+            'name'      => 'Manager Main',
+            'password'  => Hash::make('password'),
+            'branch_id' => $branch1->id,
+            'is_active' => true,
+        ]);
+        $bm1->assignRole('branch_manager');
+
+        $bm2 = User::firstOrCreate(['email' => 'bm.north@ieams.test'], [
+            'name'      => 'Manager North',
+            'password'  => Hash::make('password'),
+            'branch_id' => $branch2->id,
+            'is_active' => true,
+        ]);
+        $bm2->assignRole('branch_manager');
+
+        $bm3 = User::firstOrCreate(['email' => 'bm.south@ieams.test'], [
+            'name'      => 'Manager South',
+            'password'  => Hash::make('password'),
+            'branch_id' => $branch3->id,
+            'is_active' => true,
+        ]);
+        $bm3->assignRole('branch_manager');
+
+        // Admin user
+        $admin = User::firstOrCreate(['email' => 'admin@ieams.test'], [
+            'name'      => 'Administrator',
+            'password'  => Hash::make('password'),
+            'branch_id' => $branch1->id,
+            'is_active' => true,
+        ]);
+        $admin->assignRole('admin');
     }
 }
