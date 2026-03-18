@@ -236,7 +236,7 @@ erDiagram
     }
 
     %% --- Branch relationships ---
-    branches }o--o| users : "managed by"
+    branches }o--|| users : "manager"
     branches ||--o{ shifts : "has"
     branches ||--o{ employees : "employs"
     branches ||--o{ attendance_records : "recorded at"
