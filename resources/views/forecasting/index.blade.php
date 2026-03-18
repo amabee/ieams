@@ -133,7 +133,7 @@
     </div>
 
     {{-- AI Interpretation --}}
-    <div class="card shadow-sm border-0">
+    <!-- <div class="card shadow-sm border-0">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
             <h6 class="mb-0 fw-semibold"><i class="bi bi-stars me-2 text-warning"></i>AI Interpretation</h6>
             <button class="btn btn-sm btn-outline-primary" id="interpretBtn" onclick="interpretForecast()">
@@ -143,7 +143,7 @@
         <div class="card-body" id="interpretPanel">
             <p class="text-muted mb-0 small">Click <strong>Interpret Data</strong> to get a plain-English summary of the current forecast, including trend analysis and recommended actions.</p>
         </div>
-    </div>
+    </div> -->
 </div>
 @endsection
 
