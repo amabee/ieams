@@ -439,10 +439,10 @@
         @yield('content')
     </main>
 
-    <footer class="v1-footer">
+    <!-- <footer class="v1-footer">
         &copy; {{ date('Y') }} IEAMS &mdash; Employee Attendance Management System &mdash;
         <span style="color:var(--v1-accent);font-weight:600">Classic v1</span>
-    </footer>
+    </footer> -->
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
